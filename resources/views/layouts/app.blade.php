@@ -15,7 +15,7 @@
     <link href="{{ url('/') }}/css/fontawesome5.all.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="{{ url('/') }}/css/datatables.min.css"/>
 
-@if (!Request::is('profile','calendar'))
+@if (!Request::is('profile'))
     <!--date picker-->
     <link rel="stylesheet" href="{{ url('/') }}/css/tempusdominus-bootstrap-4.min.css" />
 @endif

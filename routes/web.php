@@ -41,6 +41,8 @@ Route::get('/api/user', 'ApiController@User');
 Route::get('/api/users', 'ApiController@UserList');
 
 Route::post('/api/addedituser', 'ApiController@AddEditUser');
+Route::post('/api/addevent', 'ApiController@AddEvent');
+Route::post('/api/seteventstatus', 'ApiController@SetEventStatus');
 Route::post('/api/register', 'ApiController@Register');
 Route::post('/api/edit/{id}', 'ApiController@Edit')->where('id', '[1-9][0-9]*');
 

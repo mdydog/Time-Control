@@ -7,7 +7,7 @@
 <script src="{{ url('/') }}/js/datatables.min.js"></script>
 
 
-@if (!Request::is('profile','calendar'))
+@if (!Request::is('profile'))
 <!--date picker-->
 <script src="{{url('/')}}/js/moment.min.js"></script>
 <script src="{{url('/')}}/js/moment_locale_es.js"></script>

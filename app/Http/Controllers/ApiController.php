@@ -79,13 +79,13 @@ class ApiController extends Controller
         $user = Auth::user();
 
         if ($user->isInGroup(2)){
-            $rows = Event::all();
+            $rows = Event::orderBy('from','asc')->get()->all();
         }
         elseif ($user->isInGroup(3)){
-            $rows = DB::select("select * from events where user is null or user in (select id from users where supervisor = ?) or user = ?",[Auth::id(),Auth::id()]);
+            $rows = DB::select("select * from events where user is null or user in (select id from users where supervisor = ?) or user = ? order by events.from asc",[Auth::id(),Auth::id()]);
         }
         else{
-            $rows = DB::select("select * from events where user is null or user = ?",[Auth::id()]);
+            $rows = DB::select("select * from events where user is null or user = ? order by events.from asc",[Auth::id()]);
         }
 
         return $this->response(200,array('status'=>'ok','data'=>$rows));
@@ -172,6 +172,77 @@ class ApiController extends Controller
             ]);
         }
         DB::commit();
+        return $this->response(200,array('status'=>'ok'));
+    }
+
+    public function AddEvent(Request $request)
+    {
+        Validator::make($request->all(), [
+            'datefrom' => 'required|integer',
+            'dateto' => 'required|integer',
+            'fest' => 'required|integer',
+            'comment' => 'required|string|max:200|min:1'
+        ])->validate();
+
+        $user = Auth::user();
+
+        $approved = 0;
+        $usr = $user->id;
+        $datefrom = intval($request["datefrom"]);
+        $dateto = intval($request["dateto"]);
+        $comment = $request["comment"];
+        $fest = intval($request["fest"]);
+
+        if ($user->isInGroup(2) && $fest===1){
+            $approved=1;
+            $usr = null;
+        }
+
+        if ($datefrom>$dateto){
+            return $this->response(200,array('status'=>'error','msg'=>'Dates error!'));
+        }
+
+        if (trim($comment)===""){
+            return $this->response(200,array('status'=>'error','msg'=>'Wrong title'));
+        }
+
+        $e = Event::create([
+            'user' => $usr,
+            'from' => $datefrom,
+            'to' => $dateto,
+            'comment' => $comment.($usr!==null?", ".$user->name:""),
+            'approved' => $approved
+        ]);
+
+        return $this->response(200,array('status'=>'ok'));
+    }
+
+    public function SetEventStatus(Request $request)
+    {
+        Validator::make($request->all(), [
+            'id' => 'required|integer',
+            'status' => 'required|integer'
+        ])->validate();
+
+        $user = Auth::user();
+        $event = Event::where('id','=',$request['id'])->get()->first();
+        $status = intval($request["status"]);
+        if ($status!==1 && $status!==2){
+            return $this->response(200,array('status'=>'error','msg'=>'Unknown status'));
+        }
+
+        if ($event->approved === 0 && (
+            $user->isInGroup(2)||
+            $user->isInGroup(3) &&
+                $event->user !== null &&
+                count(User::where('supervisor','=',$user->id)->where('id','=',$event->user)->get()->all())>0)){
+            $event->approved=$status;
+            $event->save();
+        }
+        else{
+            return $this->response(200,array('status'=>'error','msg'=>'No access'));
+        }
+
         return $this->response(200,array('status'=>'ok'));
     }
 
@@ -286,7 +357,7 @@ class ApiController extends Controller
             }
             else{
                 if ($supervisorLimit){
-                    $rows = DB::select('select * from times where (select count(*) from users where id = times.user and supervisor = ?) > 0 and date >= ? and date <= ? order by user', [Auth::id(),$from,$to]);
+                    $rows = DB::select('select * from times where (select count(*) from users where id = times.user and (supervisor = ? or users.id = ?)) > 0 and date >= ? and date <= ? order by user', [Auth::id(),Auth::id(),$from,$to]);
                 }
                 else{
                     $rows = Time::where('date','>=',$from)->where('date','<=',$to)->orderBy('user')->get()->all();
@@ -320,21 +391,39 @@ class ApiController extends Controller
 
     public function UserList(Request $request)
     {
-        if (!Auth::user()->isInGroup(2)){
+        if (!Auth::user()->isInAnyGroup([2,3])){
             abort(404);
             return;
         }
-        $data = DB::table('users')
-            ->join('users_groups', 'users.id', '=', 'users_groups.user')
-            ->get(array(
-                'users.id',
-                'name',
-                'mins',
-                'email',
-                'active',
-                'group',
-                'supervisor'
-            ))->all();
+        if (Auth::user()->isInGroup(2)){
+            $data = DB::table('users')
+                ->join('users_groups', 'users.id', '=', 'users_groups.user')
+                ->get(array(
+                    'users.id',
+                    'name',
+                    'mins',
+                    'email',
+                    'active',
+                    'group',
+                    'supervisor'
+                ))->all();
+        }
+        else{
+            $data = DB::table('users')
+                ->join('users_groups', 'users.id', '=', 'users_groups.user')
+                ->where('users.supervisor','=',Auth::id())
+                ->orWhere('users.id','=',Auth::id())
+                ->get(array(
+                    'users.id',
+                    'name',
+                    'mins',
+                    'email',
+                    'active',
+                    'group',
+                    'supervisor'
+                ))->all();
+        }
+
 
         $users = [];
         foreach ($data as $dbuser){
