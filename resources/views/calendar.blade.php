@@ -33,7 +33,7 @@
                     </div>
                     @if (Auth::user()->isInGroup(2))
                         <div class="form-check">
-                            <input type="checkbox" class="form-check-input" id="ufest"><label for="ufest" class="form-check-label">Fest Day</label>
+                            <input type="checkbox" class="form-check-input" id="ufest"><label for="ufest" class="form-check-label">Holiday</label>
                         </div>
                     @endif
                 </div>

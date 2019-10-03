@@ -67,7 +67,7 @@ function insertEvent(event){
     var html = "<li"+(cs!==""?" onclick=\"go("+(event.from*1000)+")\" class=\""+cs+"\"":"")+">"+event.comment+approved_label+adm_btn+date_ranges+"</li>";
     if (event.approved!==2){
         var edate=new Date(event.to*1000);
-        edate.setDate(edate.getDate()+1);
+        edate.setUTCDate(edate.getUTCDate()+1);
         calendar.addEvent({
             title: event.comment,
             start: new Date(event.from*1000),
@@ -116,8 +116,7 @@ function setEventStatus(e,status,id) {
 
 function addEvent(e){
     e.preventDefault();
-
-    var date_from = parseInt(datefrom.datetimepicker('viewDate')._d.getTime()/1000);
+    var date_from = parseInt(moment(datefrom.val()+"Z","D/M/YYYYZ")._d.getTime()/1000);
     if (date_from === null || date_from === undefined || isNaN(date_from)){
         modal_error.text("Wrong date from format");
         modal_error.show();
@@ -125,9 +124,7 @@ function addEvent(e){
     }
 
 
-    var date_to = new Date(dateto.datetimepicker('viewDate')._d)
-    //date_to.setDate(date_to.getDate()+1);
-    date_to = parseInt(date_to.getTime()/1000);
+    var date_to = parseInt(moment(dateto.val()+"Z","D/M/YYYYZ")._d.getTime()/1000);
     if (date_to === null || date_to === undefined || isNaN(date_to)){
         modal_error.text("Wrong date to format");
         modal_error.show();
@@ -204,7 +201,7 @@ $(document).ready(function(){
 
     var d = getOnlyDate();
     var d2 = getOnlyDate();
-    d2.setDate(d.getDate()+1);
+    d2.setUTCDate(d.getUTCDate()+1);
     datefrom.datetimepicker({
         format: 'L',
         defaultDate: d,

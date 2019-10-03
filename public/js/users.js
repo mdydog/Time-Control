@@ -17,7 +17,7 @@ var modal_user_supervisorrole = $('#urolesupervisor');
 
 
 
-function actualizaPanel(){
+function updatePanel(){
     table.DataTable().clear();
     table.DataTable().destroy();
 
@@ -47,7 +47,7 @@ function actualizaPanel(){
                         groups_data+="<span rolid='"+row.groups[i]+"'>"+name+"</span>"+(i+1<row.groups.length?", ":"");
                     }
 
-                    table.append("<tr><td>"+row.name+"</td><td>"+row.email+"</td><td>"+parseHour(row.mins)+"</td><td>"+(row.supervisor===null?"None":$('option[value=\"'+row.supervisor+'\"]').text())+"</td><td><i class=\"fas "+(row.active===1?"fa-check\" style='font-size: 1.5em;color:mediumseagreen;'":"fa-times\" style='font-size: 1.5em;color:red;'")+"></i></td><td>"+groups_data+"</td><td>"+(parseInt(cur_user_id)!==parseInt(row.id)?"<i class=\"fas fa-user-edit\" style=\"font-size:1.5em;cursor:pointer;\" onclick=\"userModal(event,"+row.id+",'"+row.name+"','"+row.email+"',"+row.supervisor+","+row.active+",'"+row.groups+"')\"></i>":"")+"</td></tr>");
+                    table.append("<tr><td>"+row.name+"</td><td>"+row.email+"</td><td>"+parseHour(row.mins)+"</td><td>"+(row.supervisor===null?"None":($('option[value=\"'+row.supervisor+'\"]').text()===""?"None":$('option[value=\"'+row.supervisor+'\"]').text()))+"</td><td><i class=\"fas "+(row.active===1?"fa-check\" style='font-size: 1.5em;color:mediumseagreen;'":"fa-times\" style='font-size: 1.5em;color:red;'")+"></i></td><td>"+groups_data+"</td><td>"+(parseInt(cur_user_id)!==parseInt(row.id)?"<i class=\"fas fa-user-edit\" style=\"font-size:1.5em;cursor:pointer;\" onclick=\"userModal(event,"+row.id+",'"+row.name+"','"+row.email+"',"+row.supervisor+","+row.active+",'"+row.groups+"','"+parseHour(row.mins)+"')\"></i>":"")+"</td></tr>");
                 });
             }
 
@@ -100,7 +100,7 @@ function addUser(e){
     }
 
     var mins = modal_user_whours.val();
-    if (mins === null || mins === undefined){
+    if (mins === null || mins === undefined || mins === ""){
         add_user_error_alert.text("Wrong working hours");
         add_user_error_alert.show();
         return;
@@ -149,7 +149,7 @@ function addUser(e){
             }
             if (result.status==="ok"){
                 add_user_modal.modal('hide');
-                actualizaPanel();
+                updatePanel();
                 if (id==-1){
                     $.notify("User registered","success");
                 }
@@ -170,7 +170,7 @@ function addUser(e){
     });
 }
 
-function userModal(e,id,name,email,supervisor,active,groups){
+function userModal(e,id,name,email,supervisor,active,groups,hours){
     e.preventDefault();
     add_user_error_alert.hide();
 
@@ -178,17 +178,21 @@ function userModal(e,id,name,email,supervisor,active,groups){
         modal_user_id.val("");
         modal_user_name.val("");
         modal_user_email.val("");
+        modal_user_whours.val("");
         modal_user_supervisor.val(-1);
         modal_user_active.attr('checked',true);
-        modal_user_adminrole.attr('checked',false);
-        modal_user_supervisorrole.attr('checked',false);
+        modal_user_adminrole.removeAttr('checked');
+        modal_user_supervisorrole.removeAttr('checked');
     }
     else{
         modal_user_id.val(id);
         modal_user_name.val(name);
         modal_user_email.val(email);
+        modal_user_whours.val(hours);
         modal_user_supervisor.val(supervisor===null?-1:supervisor);
         modal_user_active.attr('checked',parseInt(active)===1)
+        modal_user_adminrole.removeAttr('checked');
+        modal_user_supervisorrole.removeAttr('checked');
         var gr = groups.split(",");
         for(var i = 0;i<gr.length;i++){
             if (parseInt(gr[i]) === 2){
@@ -208,7 +212,7 @@ $(document).ready(function(){
         userModal(e);
     });
 
-    actualizaPanel();
+    updatePanel();
 });
 
 

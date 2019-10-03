@@ -21,7 +21,7 @@ class CreateEventsTable extends Migration
             $table->string('comment');
             $table->tinyInteger('approved')->default(0);
             $table->timestamps();
-
+            $table->index('user');
             $table->foreign('user')->references('id')->on('users');
         });
     }

@@ -27,6 +27,7 @@ class CreateUsersGroupsTable extends Migration
 
             $table->foreign('user')->references('id')->on('users');
             $table->foreign('group')->references('id')->on('groups');
+            $table->index('user');
         });
         $pw = Str::random(10);
         $user = User::create([

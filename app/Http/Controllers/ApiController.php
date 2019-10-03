@@ -193,6 +193,10 @@ class ApiController extends Controller
         $comment = $request["comment"];
         $fest = intval($request["fest"]);
 
+        if ($user->isInAnyGroup([2,3])){
+            $approved=1;
+        }
+
         if ($user->isInGroup(2) && $fest===1){
             $approved=1;
             $usr = null;

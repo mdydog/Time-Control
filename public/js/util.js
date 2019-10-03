@@ -44,10 +44,10 @@ function secondsAmount(seconds,show_seconds,only_time_format) {
 
 function dateFormat(date,show_time) {
     if (show_time){
-        return format2digits(date.getDate())+"/"+ format2digits(date.getMonth()+1)+"/"+ date.getFullYear()+" "+format2digits(date.getHours())+":"+format2digits(date.getMinutes());
+        return format2digits(date.getUTCDate())+"/"+ format2digits(date.getUTCMonth()+1)+"/"+ date.getFullYear()+" "+format2digits(date.getUTCHours())+":"+format2digits(date.getUTCMinutes());
     }
     else{
-        return format2digits(date.getDate())+"/"+ format2digits(date.getMonth()+1)+"/"+ date.getFullYear();
+        return format2digits(date.getUTCDate())+"/"+ format2digits(date.getUTCMonth()+1)+"/"+ date.getFullYear();
     }
 
 }
@@ -64,7 +64,7 @@ function parseHour(mins){
 }
 
 function daysInMonth (month, year) {
-    return new Date(year, month, 0).getDate();
+    return moment(year+"-"+format2digits(month), "YYYY-MM").daysInMonth();
 }
 
 //pasa a columna de csv
@@ -81,9 +81,6 @@ function getOnlyDate(){
 }
 
 function setTimeZero(date) {
-    date.setHours(0);
-    date.setMinutes(0);
-    date.setMilliseconds(0);
-    date.setSeconds(0);
+    date.setUTCHours(0,0,0,0);
     return date;
 }

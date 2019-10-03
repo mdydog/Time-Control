@@ -25,6 +25,8 @@ class CreateUsersTable extends Migration
             $table->timestamps();
 
             $table->foreign('supervisor')->references('id')->on('users');
+            $table->index('supervisor');
+            $table->index('active');
         });
 
     }

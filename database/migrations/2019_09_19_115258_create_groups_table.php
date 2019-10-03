@@ -18,6 +18,7 @@ class CreateGroupsTable extends Migration
             $table->bigIncrements('id');
             $table->string('name');
             $table->timestamps();
+            $table->unique('name');
         });
         Group::create(['name'=>'User']);
         Group::create(['name'=>'Admin']);
