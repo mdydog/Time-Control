@@ -381,7 +381,7 @@ class ApiController extends Controller
             }
             else{
                 if ($supervisorLimit){
-                    $rows = DB::select('select * from times where (select count(*) from users where id = times.user and (supervisor = ? or users.id = ?)) > 0 and date >= ? and date <= ? order by user', [Auth::id(),Auth::id(),$from,$to]);
+                    $rows = DB::select('select * from times where (select count(*) from users where id = times.user and (supervisor = ? or users.id = ?)) > 0 and times.date >= ? and times.date <= ? order by times.user', [Auth::id(),Auth::id(),$from,$to]);
                 }
                 else{
                     $rows = Time::where('date','>=',$from)->where('date','<=',$to)->orderBy('user')->get()->all();

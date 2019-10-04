@@ -118,7 +118,7 @@ function updatePanel() {
                     var date = dateFormat(sdate, false);
                     var start = secondsAmount(row.start_hour, false, true);
                     var end = secondsAmount(row.end_hour, false, true);
-                    var comment = row.comment.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    var comment = row.comment===null?"":row.comment.replace(/</g, "&lt;").replace(/>/g, "&gt;");
                     var regisDate = dateFormat(new Date(row.register_date * 1000));
                     var final_seconds = totalseconds;
 
