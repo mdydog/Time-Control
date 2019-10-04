@@ -84,3 +84,7 @@ function setTimeZero(date) {
     date.setUTCHours(0,0,0,0);
     return date;
 }
+$.notify.getStyle('bootstrap').html="<div><i class=\"fas fa-exclamation-circle\"></i> <span data-notify-text></span></div>"
+function notify(msg,type){
+    $.notify(msg,type);
+}

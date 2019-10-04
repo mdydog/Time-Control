@@ -96,3 +96,9 @@ pre {
 .cevent-list li:hover{
     background-color: lightgray;
 }
+.notifyjs-bootstrap-error,.notifyjs-bootstrap-success{
+    background-image: none !important;
+}
+.notifyjs-bootstrap-base{
+    padding-left: 14px !important;
+}

@@ -24,7 +24,7 @@ function updateCalendar(){
                 result = JSON.parse(data);
             }
             catch (e) {
-                $.notify("Error connecting to the server!","error");
+                notify("Error connecting to the server!","error");
                 return;
             }
             if (result.status === "ok"){
@@ -34,10 +34,10 @@ function updateCalendar(){
             }
         }
         else{
-            $.notify("Error connecting to the server!","error");
+            notify("Error connecting to the server!","error");
         }
     }).fail(function() {
-        $.notify("Error connecting to the server!","error");
+        notify("Error connecting to the server!","error");
     });
 }
 
@@ -93,23 +93,23 @@ function setEventStatus(e,status,id) {
                 result = JSON.parse(response);
             }
             catch (e) {
-                $.notify("Error connecting to the server!","error");
+                notify("Error connecting to the server!","error");
                 return;
             }
             if (result.status === "ok"){
-                $.notify("Success","success");
+                notify("Success","success");
                 b.parent().hide();
                 b.parent().parent().attr('class',(status===1?"approved":"rejected"));
             }
             else{
-                $.notify("Error!","error");
+                notify("Error!","error");
             }
         }
         else{
-            $.notify("Error connecting to the server!","error");
+            notify("Error connecting to the server!","error");
         }
     }).fail(function (e) {
-        $.notify("Error connecting to the server!","error");
+        notify("Error connecting to the server!","error");
     });
     var b =  $(e.currentTarget);
 }
@@ -147,7 +147,7 @@ function addEvent(e){
                 result = JSON.parse(response);
             }
             catch (e) {
-                $.notify("Error connecting to the server!","error");
+                notify("Error connecting to the server!","error");
                 return;
             }
             if (result.status==="ok"){
@@ -159,10 +159,10 @@ function addEvent(e){
             }
         }
         else{
-            $.notify("Error connecting to the server!","error");
+            notify("Error connecting to the server!","error");
         }
     }).fail(function (e) {
-        $.notify("Error connecting to the server!","error");
+        notify("Error connecting to the server!","error");
     });
 }
 
@@ -202,11 +202,19 @@ $(document).ready(function(){
     var d = getOnlyDate();
     var d2 = getOnlyDate();
     d2.setUTCDate(d.getUTCDate()+1);
+
+    datefrom.off('keypress').keypress(function (e) {
+        return false;
+    });
+    dateto.off('keypress').keypress(function (e) {
+        return false;
+    });
+
     datefrom.datetimepicker({
         format: 'L',
         defaultDate: d,
         locale: 'es',
-        maxDate: d2
+        //maxDate: d2
     });
     dateto.datetimepicker({
         useCurrent: false,
@@ -216,11 +224,14 @@ $(document).ready(function(){
         minDate: d
     });
     datefrom.on("change.datetimepicker", function (e) {
+        if (moment(dateto.val() + "Z", "D/M/YYYYZ")._d.getTime()<moment(datefrom.val() + "Z", "D/M/YYYYZ")._d.getTime()){
+            dateto.val(dateFormat(moment(datefrom.val() + "Z", "D/M/YYYYZ")._d));
+        }
         dateto.datetimepicker('minDate', e.date);
     });
-    dateto.on("change.datetimepicker", function (e) {
-        datefrom.datetimepicker('maxDate', e.date);
-    });
+    //dateto.on("change.datetimepicker", function (e) {
+    //    datefrom.datetimepicker('maxDate', e.date);
+    //});
 
     btn_add_event.click(function (e) {
         e.preventDefault();

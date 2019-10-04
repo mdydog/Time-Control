@@ -45,6 +45,7 @@ Route::post('/api/addevent', 'ApiController@AddEvent');
 Route::post('/api/seteventstatus', 'ApiController@SetEventStatus');
 Route::post('/api/register', 'ApiController@Register');
 Route::post('/api/edit/{id}', 'ApiController@Edit')->where('id', '[1-9][0-9]*');
+Route::post('/api/editable/{id}', 'ApiController@EnableOneEdit')->where('id', '[1-9][0-9]*');
 
 
 

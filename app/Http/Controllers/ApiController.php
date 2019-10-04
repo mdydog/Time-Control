@@ -79,13 +79,13 @@ class ApiController extends Controller
         $user = Auth::user();
 
         if ($user->isInGroup(2)){
-            $rows = Event::orderBy('from','asc')->get()->all();
+            $rows = Event::where('from','>',time())->orWhere('to','>',time())->orWhere('approved','=',0)->orderBy('from','asc')->get()->all();
         }
         elseif ($user->isInGroup(3)){
-            $rows = DB::select("select * from events where user is null or user in (select id from users where supervisor = ?) or user = ? order by events.from asc",[Auth::id(),Auth::id()]);
+            $rows = DB::select("select * from events where (events.from > ".time()." or events.to > ".time()." or approved = 0) and (user is null or user in (select id from users where supervisor = ?) or user = ?) order by events.from asc",[Auth::id(),Auth::id()]);
         }
         else{
-            $rows = DB::select("select * from events where user is null or user = ? order by events.from asc",[Auth::id()]);
+            $rows = DB::select("select * from events where (events.from > ".time()." or events.to > ".time()." or approved = 0) and  (user is null or user = ?) order by events.from asc",[Auth::id()]);
         }
 
         return $this->response(200,array('status'=>'ok','data'=>$rows));
@@ -172,6 +172,25 @@ class ApiController extends Controller
             ]);
         }
         DB::commit();
+        return $this->response(200,array('status'=>'ok'));
+    }
+
+    public function EnableOneEdit(Request $request,$id){
+        $user = Auth::user();
+        $time = Time::where('id','=',$id)->get()->first();
+
+        if ($time===null || !$user->isInAnyGroup([2,3])){
+            return $this->response(200,array('status'=>'error','msg'=>"no access 0x1"));
+        }
+
+        if (!$user->isInGroup(2)){
+            if ($time->user!=$user->id && count(User::where('id','=',$time->user)->where('supervisor','=',$user->id)->get()->all())<=0){ // si no es un time suyo y no es su supervisor
+                return $this->response(200,array('status'=>'error','msg'=>"no access 0x2"));
+            }
+        }
+
+        $time->editable=1;
+        $time->save();
         return $this->response(200,array('status'=>'ok'));
     }
 
@@ -266,7 +285,7 @@ class ApiController extends Controller
             $rdate2->setTimestamp(time());
             $rdate2->setTime(0,0,0);
 
-            if ($rdate->getTimestamp()!==$rdate2->getTimestamp()){
+            if ($rows[0]->editable === 0 && $rdate->getTimestamp()!==$rdate2->getTimestamp()){
                 return $this->response(200,array('status'=>'error','msg'=>'This date is too old'));
             }
 
@@ -313,6 +332,7 @@ class ApiController extends Controller
         }
 
         $rows[0]->comment = $comment;
+        $rows[0]->editable = 0;
         $rows[0]->save();
 
         return $this->response(200,array('status'=>'ok'));

@@ -28,7 +28,7 @@ function updatePanel(){
                 result = JSON.parse(data);
             }
             catch (e) {
-                $.notify("Error connecting to the server!","error");
+                notify("Error connecting to the server!","error");
                 return;
             }
             if (result.status === "ok"){
@@ -65,10 +65,10 @@ function updatePanel(){
             table.DataTable().columns.adjust().draw()
         }
         else{
-            $.notify("Error connecting to the server!","error");
+            notify("Error connecting to the server!","error");
         }
     }).fail(function() {
-        $.notify("Error connecting to the server!","error");
+        notify("Error connecting to the server!","error");
     });
 }
 
@@ -144,17 +144,17 @@ function addUser(e){
                 result = JSON.parse(response);
             }
             catch (e) {
-                $.notify("Error connecting to the server!","error");
+                notify("Error connecting to the server!","error");
                 return;
             }
             if (result.status==="ok"){
                 add_user_modal.modal('hide');
                 updatePanel();
                 if (id==-1){
-                    $.notify("User registered","success");
+                    notify("User registered","success");
                 }
                 else{
-                    $.notify("User edited","success");
+                    notify("User edited","success");
                 }
             }
             else{
@@ -163,10 +163,10 @@ function addUser(e){
             }
         }
         else{
-            $.notify("Error connecting to the server!","error");
+            notify("Error connecting to the server!","error");
         }
     }).fail(function (e) {
-        $.notify("Error connecting to the server!","error");
+        notify("Error connecting to the server!","error");
     });
 }
 

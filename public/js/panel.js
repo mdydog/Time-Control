@@ -41,6 +41,8 @@ var unregistered_days = 0;
 var expected_hours = 0;
 var current_time_data = null;
 
+var disabledDates = [];
+
 function insideEvent(unix_seconds, uid) {
     for (var i = 0; i < events.length; i++) {
         var event = events[i];
@@ -84,14 +86,14 @@ function updatePanel() {
             try {
                 result = JSON.parse(data);
             } catch (e) {
-                $.notify("Error connecting to the server!", "error");
+                notify("Error connecting to the server!", "error");
                 return;
             }
             //calculamos el minimo dia de la semana para calcular el tiempo trabajado esta semana
             var mindateweek = getOnlyDate();
             mindateweek.setUTCDate(mindateweek.getUTCDate() - mindateweek.getUTCDay() + 1);
 
-            var disabledDates = [];
+            disabledDates = [];
             if (result.status === "ok") {
                 current_time_data = result.data;
                 result.data.forEach(function (row) {
@@ -123,12 +125,14 @@ function updatePanel() {
 
                     var buttons = "";
                     if (adm) {
-                        buttons = "<i class=\"fas fa-highlighter\" style='cursor:pointer;' title='Enable one time edit mode'></i>";
+                        if (row.editable===0){
+                            buttons = "<i class=\"fas fa-highlighter\" onclick=\"enableOneEdit(event,"+row.id+")\" style='cursor:pointer;' title='Enable one time edit mode'></i>";
+                        }
                     } else {
-                        if (dateFormat(new Date(), false) === regisDate) {
-                            buttons = "<i class=\"fas fa-edit\" style='cursor:pointer;color:greenyellow;text-shadow: 0 0 3px #000;' title='Edit' onclick='editCommentModal(event," + row.id + ",true," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ")'></i>";
+                        if (dateFormat(new Date(), false) === regisDate || row.editable) {
+                            buttons = "<i class=\"fas fa-edit\" style='cursor:pointer;color:greenyellow;text-shadow: 0 0 3px #000;' title='Edit' onclick='editCommentModal(event," + row.id + ",true," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
                         } else {
-                            buttons = "<i class=\"fas fa-edit\" style='cursor:pointer;' title='Edit comment' onclick='editCommentModal(event," + row.id + ",false," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ")'></i>";
+                            buttons = "<i class=\"fas fa-edit\" style='cursor:pointer;' title='Edit comment' onclick='editCommentModal(event," + row.id + ",false," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
                         }
                     }
 
@@ -256,10 +260,10 @@ function updatePanel() {
             table.DataTable().columns.adjust().draw();
             busy = false;
         } else {
-            $.notify("Error connecting to the server!", "error");
+            notify("Error connecting to the server!", "error");
         }
     }).fail(function () {
-        $.notify("Error connecting to the server!", "error");
+        notify("Error connecting to the server!", "error");
     });
 }
 
@@ -270,16 +274,16 @@ function loadEvents(cb) {
             try {
                 result = JSON.parse(data);
             } catch (e) {
-                $.notify("Error connecting to the server!", "error");
+                notify("Error connecting to the server!", "error");
                 return;
             }
             events = result.data;
             cb(updatePanel);
         } else {
-            $.notify("Error connecting to the server!", "error");
+            notify("Error connecting to the server!", "error");
         }
     }).fail(function () {
-        $.notify("Error connecting to the server!", "error");
+        notify("Error connecting to the server!", "error");
     });
 }
 
@@ -379,35 +383,63 @@ function registerDay(e, full) {
             try {
                 result = JSON.parse(response);
             } catch (e) {
-                $.notify("Error connecting to the server!", "error");
+                notify("Error connecting to the server!", "error");
                 return;
             }
             if (result.status === "ok") {
                 register_modal.modal('hide');
                 updatePanel();
                 if (current_edit_id === 0) {
-                    $.notify("Report registered", "success");
+                    notify("Report registered", "success");
                 } else {
-                    $.notify("Success", "success");
+                    notify("Success", "success");
                 }
             } else {
                 showRegisterError(result.msg);
             }
         } else {
-            $.notify("Error connecting to the server!", "error");
+            notify("Error connecting to the server!", "error");
         }
     }).fail(function (e) {
-        $.notify("Error connecting to the server!", "error");
+        notify("Error connecting to the server!", "error");
     });
 }
 
-function editCommentModal(e, id, full, f, t, b) {
+function enableOneEdit(e,id) {
+    e.preventDefault();
+    var btn = e.currentTarget;
+    $.post(url + "api/editable/"+id,{_token: csrf}, function (response) {
+        if (response.length > 0) {
+            var result = null;
+            try {
+                result = JSON.parse(response);
+            } catch (e) {
+                notify("Error connecting to the server!", "error");
+                return;
+            }
+            if (result.status === "ok") {
+                $(btn).hide();
+                notify("Success", "success");
+            } else {
+                notify(result.msg, "error");
+            }
+        } else {
+            notify("Error connecting to the server!", "error");
+        }
+    }).fail(function (e) {
+        notify("Error connecting to the server!", "error");
+    });
+}
+
+function editCommentModal(e, id, full, f, t, b,date) {
     e.preventDefault();
 
     showRegisterError(null);
     register_comment.text($('#comment' + id).text());
+
     if (full) {
         register_date.parent().parent().show();
+
         register_to_hour.parent().show();
         register_from_hour.parent().show();
         register_break.parent().show();
@@ -420,6 +452,7 @@ function editCommentModal(e, id, full, f, t, b) {
         register_break.val(b / 60);
         register_modal.find(".modal-title").text("Edit working day");
         register_modal.find("button[class*='btn-primary']").attr('onclick', "registerDay(event,true)");
+        register_date.val(date);
     } else {
         register_date.parent().parent().hide();
         register_to_hour.parent().hide();
@@ -440,7 +473,7 @@ function loadUsers(cb) {
             try {
                 result = JSON.parse(data);
             } catch (e) {
-                $.notify("Error connecting to the server!", "error");
+                notify("Error connecting to the server!", "error");
                 return;
             }
             if (adm) {
@@ -450,10 +483,10 @@ function loadUsers(cb) {
             }
             cb();
         } else {
-            $.notify("Error connecting to the server!", "error");
+            notify("Error connecting to the server!", "error");
         }
     }).fail(function () {
-        $.notify("Error connecting to the server!", "error");
+        notify("Error connecting to the server!", "error");
     });
 }
 
@@ -587,12 +620,19 @@ $(document).ready(function () {
     register_date.off('keypress').keypress(function (e) {
         return false;
     });
+    datefrom.off('keypress').keypress(function (e) {
+        return false;
+    });
+    dateto.off('keypress').keypress(function (e) {
+        return false;
+    });
+
 
     datefrom.datetimepicker({
         format: 'L',
         defaultDate: new Date().setUTCDate(1),
         locale: 'es',
-        maxDate: new Date().setUTCDate(daysInMonth(new Date().getUTCMonth() + 1, new Date().getFullYear()))
+        //maxDate: new Date().setUTCDate(daysInMonth(new Date().getUTCMonth() + 1, new Date().getFullYear()))
     });
     dateto.datetimepicker({
         useCurrent: false,
@@ -602,11 +642,14 @@ $(document).ready(function () {
         minDate: new Date().setUTCDate(1)
     });
     datefrom.on("change.datetimepicker", function (e) {
+        if (moment(dateto.val() + "Z", "D/M/YYYYZ")._d.getTime()<moment(datefrom.val() + "Z", "D/M/YYYYZ")._d.getTime()){
+            dateto.val(dateFormat(moment(datefrom.val() + "Z", "D/M/YYYYZ")._d));
+        }
         dateto.datetimepicker('minDate', e.date);
         updatePanel();
     });
     dateto.on("change.datetimepicker", function (e) {
-        datefrom.datetimepicker('maxDate', e.date);
+        //datefrom.datetimepicker('maxDate', e.date);
         updatePanel();
     });
 
