@@ -16,31 +16,15 @@ if (adm){
 }
 
 function updateCalendar(){
-
-    $.get(url+"api/events",function (data) {
-        if (data.length>0){
-            var result=null;
-            try{
-                result = JSON.parse(data);
-            }
-            catch (e) {
-                notify("Error connecting to the server!","error");
-                return;
-            }
-            if (result.status === "ok"){
-                result.data.forEach(function(row){
-                    var now =parseInt((setTimeZero(new Date())).getTime()/1000);
-                    if (parseInt(row.from) >= now || parseInt(row.to) >= now){
-                        insertEvent(row);
-                    }
-                });
-            }
+    request('get',url+"api/events",undefined,function (result) {
+        if (result.status === "ok"){
+            result.data.forEach(function(row){
+                var now =parseInt((setTimeZero(new Date())).getTime()/1000);
+                if (parseInt(row.from) >= now || parseInt(row.to) >= now){
+                    insertEvent(row);
+                }
+            });
         }
-        else{
-            notify("Error connecting to the server!","error");
-        }
-    }).fail(function() {
-        notify("Error connecting to the server!","error");
     });
 }
 
@@ -89,32 +73,16 @@ function setEventStatus(e,status,id) {
         return;
     }
     var b =  $(e.currentTarget);
-    $.post(url+"/api/seteventstatus", {status: status,id: id,_token: csrf},function (response) {
-        if (response.length>0){
-            var result=null;
-            try{
-                result = JSON.parse(response);
-            }
-            catch (e) {
-                notify("Error connecting to the server!","error");
-                return;
-            }
-            if (result.status === "ok"){
-                notify("Success","success");
-                b.parent().hide();
-                b.parent().parent().attr('class',(status===1?"approved":"rejected"));
-            }
-            else{
-                notify("Error!","error");
-            }
+    request('post',url+"/api/seteventstatus",{status: status,id: id},function (result) {
+        if (result.status === "ok"){
+            notify("Success","success");
+            b.parent().hide();
+            b.parent().parent().attr('class',(status===1?"approved":"rejected"));
         }
         else{
-            notify("Error connecting to the server!","error");
+            notify("Error!","error");
         }
-    }).fail(function (e) {
-        notify("Error connecting to the server!","error");
     });
-    var b =  $(e.currentTarget);
 }
 
 function addEvent(e){
@@ -142,30 +110,14 @@ function addEvent(e){
     }
 
     modal_error.hide();
-
-    $.post(url+"/api/addevent", {fest: (adm?(ufest.prop("checked") === true?1:0):0),datefrom: date_from,dateto: date_to,comment: comment,_token: csrf},function (response) {
-        if (response.length>0){
-            var result=null;
-            try{
-                result = JSON.parse(response);
-            }
-            catch (e) {
-                notify("Error connecting to the server!","error");
-                return;
-            }
-            if (result.status==="ok"){
-                location.reload();
-            }
-            else{
-                modal_error.text(result.msg);
-                modal_error.show();
-            }
+    request('post',url+"/api/addevent",{fest: (adm?(ufest.prop("checked") === true?1:0):0),datefrom: date_from,dateto: date_to,comment: comment},function (result) {
+        if (result.status==="ok"){
+            location.reload();
         }
         else{
-            notify("Error connecting to the server!","error");
+            modal_error.text(result.msg);
+            modal_error.show();
         }
-    }).fail(function (e) {
-        notify("Error connecting to the server!","error");
     });
 }
 

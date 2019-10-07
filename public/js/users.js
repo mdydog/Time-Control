@@ -21,54 +21,39 @@ function updatePanel(){
     table.DataTable().clear();
     table.DataTable().destroy();
 
-    $.get(url+"api/users",function (data) {
-        if (data.length>0){
-            var result=null;
-            try{
-                result = JSON.parse(data);
-            }
-            catch (e) {
-                notify("Error connecting to the server!","error");
-                return;
-            }
-            if (result.status === "ok"){
-                result.data.forEach(function(row){
-                    var groups_data = "";
-                    for(var i = 0;i<row.groups.length;i++){
-                        var name = "User";
-                        switch (row.groups[i]) {
-                            case 2:
-                                name="Admin";
-                                break;
-                            case 3:
-                                name="Supervisor";
-                                break;
-                        }
-                        groups_data+="<span rolid='"+row.groups[i]+"'>"+name+"</span>"+(i+1<row.groups.length?", ":"");
+    request('get',url+"api/users",undefined,function (result) {
+        if (result.status === "ok"){
+            result.data.forEach(function(row){
+                var groups_data = "";
+                for(var i = 0;i<row.groups.length;i++){
+                    var name = "User";
+                    switch (row.groups[i]) {
+                        case 2:
+                            name="Admin";
+                            break;
+                        case 3:
+                            name="Supervisor";
+                            break;
                     }
+                    groups_data+="<span rolid='"+row.groups[i]+"'>"+name+"</span>"+(i+1<row.groups.length?", ":"");
+                }
 
-                    table.append("<tr><td>"+row.name+"</td><td>"+row.email+"</td><td>"+parseHour(row.mins)+"</td><td>"+(row.supervisor===null?"None":($('option[value=\"'+row.supervisor+'\"]').text()===""?"None":$('option[value=\"'+row.supervisor+'\"]').text()))+"</td><td><i class=\"fas "+(row.active===1?"fa-check\" style='font-size: 1.5em;color:mediumseagreen;'":"fa-times\" style='font-size: 1.5em;color:red;'")+"></i></td><td>"+groups_data+"</td><td>"+(parseInt(cur_user_id)!==parseInt(row.id)?"<i class=\"fas fa-user-edit\" style=\"font-size:1.5em;cursor:pointer;\" onclick=\"userModal(event,"+row.id+",'"+row.name+"','"+row.email+"',"+row.supervisor+","+row.active+",'"+row.groups+"','"+parseHour(row.mins)+"')\"></i>":"")+"</td></tr>");
-                });
-            }
-
-            table.attr('style','width:100%');
-            table.DataTable({
-                "order": [[ 0, "desc" ]],
-                "scrollX": true,
-                responsive: true,
-                "columnDefs": [
-                    { "orderable": false, "targets": [5,3] }
-                ]
+                table.append("<tr><td>"+row.name+"</td><td>"+row.email+"</td><td>"+parseHour(row.mins)+"</td><td>"+(row.supervisor===null?"None":($('option[value=\"'+row.supervisor+'\"]').text()===""?"None":$('option[value=\"'+row.supervisor+'\"]').text()))+"</td><td><i class=\"fas "+(row.active===1?"fa-check\" style='font-size: 1.5em;color:mediumseagreen;'":"fa-times\" style='font-size: 1.5em;color:red;'")+"></i></td><td>"+groups_data+"</td><td>"+(parseInt(cur_user_id)!==parseInt(row.id)?"<i class=\"fas fa-user-edit\" style=\"font-size:1.5em;cursor:pointer;\" onclick=\"userModal(event,"+row.id+",'"+row.name+"','"+row.email+"',"+row.supervisor+","+row.active+",'"+row.groups+"','"+parseHour(row.mins)+"')\"></i>":"")+"</td></tr>");
             });
-            $('#user_card').show();
-            $('#loading_card').hide();
-            table.DataTable().columns.adjust().draw()
         }
-        else{
-            notify("Error connecting to the server!","error");
-        }
-    }).fail(function() {
-        notify("Error connecting to the server!","error");
+
+        table.attr('style','width:100%');
+        table.DataTable({
+            "order": [[ 0, "desc" ]],
+            "scrollX": true,
+            responsive: true,
+            "columnDefs": [
+                { "orderable": false, "targets": [5,3] }
+            ]
+        });
+        $('#user_card').show();
+        $('#loading_card').hide();
+        table.DataTable().columns.adjust().draw()
     });
 }
 
@@ -136,37 +121,21 @@ function addUser(e){
     }
     add_user_error_alert.hide();
 
-
-    $.post(url+"api/addedituser",{id: id,name: name,mins:mins,email: email, supervisor: supervisor, active: active, adminrole: adminrole, supervisorrole: supervisorrole,_token: csrf},function (response) {
-        if (response.length>0){
-            var result=null;
-            try{
-                result = JSON.parse(response);
-            }
-            catch (e) {
-                notify("Error connecting to the server!","error");
-                return;
-            }
-            if (result.status==="ok"){
-                add_user_modal.modal('hide');
-                updatePanel();
-                if (id==-1){
-                    notify("User registered","success");
-                }
-                else{
-                    notify("User edited","success");
-                }
+    request('post',url+"api/addedituser",{id: id,name: name,mins:mins,email: email, supervisor: supervisor, active: active, adminrole: adminrole, supervisorrole: supervisorrole},function (result) {
+        if (result.status==="ok"){
+            add_user_modal.modal('hide');
+            updatePanel();
+            if (id==-1){
+                notify("User registered","success");
             }
             else{
-                add_user_error_alert.text(result.msg);
-                add_user_error_alert.show();
+                notify("User edited","success");
             }
         }
         else{
-            notify("Error connecting to the server!","error");
+            add_user_error_alert.text(result.msg);
+            add_user_error_alert.show();
         }
-    }).fail(function (e) {
-        notify("Error connecting to the server!","error");
     });
 }
 

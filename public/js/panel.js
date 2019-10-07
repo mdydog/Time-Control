@@ -80,210 +80,190 @@ function updatePanel() {
     unregistered_days = 0;
     current_time_data = [];
 
-    $.get(url + "api/report" + (adm ? (current_search === -2 ? "/all" : "/" + current_search) : "") + "/" + parseInt(moment(datefrom.val() + "Z", "D/M/YYYYZ")._d.getTime() / 1000) + "/" + parseInt(moment(dateto.val() + "Z", "D/M/YYYYZ")._d.getTime() / 1000), function (data) {
-        if (data.length > 0) {
-            var result = null;
-            try {
-                result = JSON.parse(data);
-            } catch (e) {
-                notify("Error connecting to the server!", "error");
-                return;
-            }
-            //calculamos el minimo dia de la semana para calcular el tiempo trabajado esta semana
-            var mindateweek = getOnlyDate();
-            mindateweek.setUTCDate(mindateweek.getUTCDate() - mindateweek.getUTCDay() + 1);
+    var aurl=url + "api/report";
+    if (adm){
+        aurl+=(current_search === -2 ? "/all" : "/" + current_search);
+    }
+    aurl+="/" + parseInt(moment(datefrom.val() + "Z", "D/M/YYYYZ")._d.getTime() / 1000) + "/" + parseInt(moment(dateto.val() + "Z", "D/M/YYYYZ")._d.getTime() / 1000);
 
-            disabledDates = [];
-            if (result.status === "ok") {
-                current_time_data = result.data;
-                result.data.forEach(function (row) {
-                    var sdate = new Date(row.date * 1000);
-                    disabledDates.push(sdate);
-                    var diffSeconds = row.end_hour - row.start_hour;
-                    var totalseconds = diffSeconds - row.breaktime;
-                    if (sdate.getUTCDate() === new Date().getUTCDate() && sdate.getUTCMonth() === new Date().getUTCMonth() && sdate.getFullYear() === new Date().getFullYear()) {
-                        todaySeconds += totalseconds;
-                    }
-                    /*if (sdate.getUTCMonth() >= new Date(datefrom.datetimepicker('viewDate')._d).getUTCMonth() &&
-                        sdate.getUTCMonth() <= new Date(dateto.datetimepicker('viewDate')._d).getUTCMonth() &&
-                        sdate.getFullYear() >= new Date(datefrom.datetimepicker('viewDate')._d).getFullYear() &&
-                        sdate.getFullYear() <= new Date(dateto.datetimepicker('viewDate')._d).getFullYear()){
-                        thisMonthSeconds+=totalseconds;
-                    }*/
-                    thisMonthSeconds += totalseconds;
-                    if (sdate >= mindateweek) {
-                        thisWeekSeconds += totalseconds;
-                    }
+    request('get',aurl,undefined,function(result){
+        //calculamos el minimo dia de la semana para calcular el tiempo trabajado esta semana
+        var mindateweek = getOnlyDate();
+        mindateweek.setUTCDate(mindateweek.getUTCDate() - mindateweek.getUTCDay() + 1);
 
-                    var date = dateFormat(sdate, false);
-                    var start = secondsAmount(row.start_hour, false, true);
-                    var end = secondsAmount(row.end_hour, false, true);
-                    var comment = row.comment===null?"":row.comment.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                    var regisDate = dateFormat(new Date(row.register_date * 1000));
-                    var final_seconds = totalseconds;
-
-
-                    var buttons = "";
-                    if (adm) {
-                        if (row.editable===0){
-                            buttons = "<i class=\"fas fa-highlighter\" onclick=\"enableOneEdit(event,"+row.id+")\" style='cursor:pointer;' title='Enable one time edit mode'></i>";
-                        }
-                    } else {
-                        if (dateFormat(new Date(), false) === regisDate || row.editable) {
-                            buttons = "<i class=\"fas fa-edit\" style='cursor:pointer;color:greenyellow;text-shadow: 0 0 3px #000;' title='Edit' onclick='editCommentModal(event," + row.id + ",true," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
-                        } else {
-                            buttons = "<i class=\"fas fa-edit\" style='cursor:pointer;' title='Edit comment' onclick='editCommentModal(event," + row.id + ",false," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
-                        }
-                    }
-
-                    var maxfseconds = 0;
-                    for (var u = 0; u < users.length; u++) {
-                        if (users[u].id === row.user) {
-                            maxfseconds = users[u].mins * 60;
-                            break;
-                        }
-                    }
-
-                    var status_icon = "";
-                    if (final_seconds > maxfseconds) {
-                        status_icon = "<i class=\"fas fa-exclamation-triangle\" style='color:yellow;text-shadow: 0 0 3px #000;' title='Too much time in your working day!'></i>";
-                        warning_days++;
-                    } else if (date !== regisDate) {
-                        status_icon = "<i class=\"fas fa-exclamation-triangle\" style=\"color:yellow;text-shadow: 0 0 3px #000;\" title=\"Your registration date was after your working date! Don't do that!!\"></i>";
-                        warning_days++;
-                    } else {
-                        status_icon = "<i class=\"fas fa-check-circle\" style='color:greenyellow;text-shadow: 0 0 3px #000;' title='Everything ok'></i>";
-                    }
-
-
-                    table.append("<tr>" +
-                        "<td>" + status_icon + "</td>" +
-                        "<td>" + row.name + "</td>" +
-                        "<td>" + date + "</td>" +
-                        "<td>" + start + "</td>" +
-                        "<td>" + end + "</td>" +
-                        "<td><pre style='max-width: 250px;max-height: 150px;' id='comment" + row.id + "'>" + comment + "</pre></td>" +
-                        "<td>" + regisDate + "</td>" +
-                        "<td>" + secondsAmount(diffSeconds) + "</td>" +
-                        "<td>" + secondsAmount(row.breaktime) + "</td>" +
-                        "<td>" + secondsAmount(final_seconds) + "</td>" +
-                        "<td>" + buttons + "</td>" +
-                        "</tr>");
-
-                });
-            }
-
-
-            users.forEach(function (user) {
-                if (current_search === -2 || user.id === current_search) {
-                    var date = setTimeZero(new Date(moment(datefrom.val() + "Z", "D/M/YYYYZ")._d));
-                    var todate = setTimeZero(new Date(moment(dateto.val() + "Z", "D/M/YYYYZ")._d));
-                    do {
-                        if (date.getUTCDay() !== 0 && date.getUTCDay() !== 6 && !insideEvent(parseInt(date.getTime() / 1000), user.id)) {
-                            expected_hours += user.mins;
-
-                            var found = false;
-                            for (var k = 0; k < current_time_data.length; k++) {
-                                var row = current_time_data[k];
-                                var rowdate = setTimeZero(new Date(row.date * 1000));
-                                if (row.user === user.id && rowdate.getTime() === date.getTime()) {
-                                    found = true;
-                                    break;
-                                }
-                            }
-                            if (!found) {
-                                unregistered_days++;
-                            }
-                        }
-                        date.setUTCDate(date.getUTCDate() + 1);
-                    }
-                    while (date.getTime() <= todate.getTime());
+        disabledDates = [];
+        if (result.status === "ok") {
+            current_time_data = result.data;
+            result.data.forEach(function (row) {
+                var sdate = new Date(row.date * 1000);
+                disabledDates.push(sdate);
+                var diffSeconds = row.end_hour - row.start_hour;
+                var totalseconds = diffSeconds - row.breaktime;
+                if (sdate.getUTCDate() === new Date().getUTCDate() && sdate.getUTCMonth() === new Date().getUTCMonth() && sdate.getFullYear() === new Date().getFullYear()) {
+                    todaySeconds += totalseconds;
                 }
+                /*if (sdate.getUTCMonth() >= new Date(datefrom.datetimepicker('viewDate')._d).getUTCMonth() &&
+                    sdate.getUTCMonth() <= new Date(dateto.datetimepicker('viewDate')._d).getUTCMonth() &&
+                    sdate.getFullYear() >= new Date(datefrom.datetimepicker('viewDate')._d).getFullYear() &&
+                    sdate.getFullYear() <= new Date(dateto.datetimepicker('viewDate')._d).getFullYear()){
+                    thisMonthSeconds+=totalseconds;
+                }*/
+                thisMonthSeconds += totalseconds;
+                if (sdate >= mindateweek) {
+                    thisWeekSeconds += totalseconds;
+                }
+
+                var date = dateFormat(sdate, false);
+                var start = secondsAmount(row.start_hour, false, true);
+                var end = secondsAmount(row.end_hour, false, true);
+                var comment = row.comment===null?"":row.comment.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                var regisDate = dateFormat(new Date(row.register_date * 1000));
+                var final_seconds = totalseconds;
+
+
+                var buttons = "";
+                if (adm) {
+                    if (row.editable===0){
+                        buttons = "<i class=\"fas fa-highlighter\" onclick=\"enableOneEdit(event,"+row.id+")\" style='cursor:pointer;' title='Enable one time edit mode'></i>";
+                    }
+                } else {
+                    if (dateFormat(new Date(), false) === regisDate || row.editable) {
+                        buttons = "<i class=\"fas fa-edit\" style='cursor:pointer;color:greenyellow;text-shadow: 0 0 3px #000;' title='Edit' onclick='editCommentModal(event," + row.id + ",true," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
+                    } else {
+                        buttons = "<i class=\"fas fa-edit\" style='cursor:pointer;' title='Edit comment' onclick='editCommentModal(event," + row.id + ",false," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
+                    }
+                }
+
+                var maxfseconds = 0;
+                for (var u = 0; u < users.length; u++) {
+                    if (users[u].id === row.user) {
+                        maxfseconds = users[u].mins * 60;
+                        break;
+                    }
+                }
+
+                var status_icon = "";
+                if (final_seconds > maxfseconds) {
+                    status_icon = "<i class=\"fas fa-exclamation-triangle\" style='color:yellow;text-shadow: 0 0 3px #000;' title='Too much time in your working day!'></i>";
+                    warning_days++;
+                } else if (date !== regisDate) {
+                    status_icon = "<i class=\"fas fa-exclamation-triangle\" style=\"color:yellow;text-shadow: 0 0 3px #000;\" title=\"Your registration date was after your working date! Don't do that!!\"></i>";
+                    warning_days++;
+                } else {
+                    status_icon = "<i class=\"fas fa-check-circle\" style='color:greenyellow;text-shadow: 0 0 3px #000;' title='Everything ok'></i>";
+                }
+
+
+                table.append("<tr>" +
+                    "<td>" + status_icon + "</td>" +
+                    "<td>" + row.name + "</td>" +
+                    "<td>" + date + "</td>" +
+                    "<td>" + start + "</td>" +
+                    "<td>" + end + "</td>" +
+                    "<td><pre style='max-width: 250px;max-height: 150px;' id='comment" + row.id + "'>" + comment + "</pre></td>" +
+                    "<td>" + regisDate + "</td>" +
+                    "<td>" + secondsAmount(diffSeconds) + "</td>" +
+                    "<td>" + secondsAmount(row.breaktime) + "</td>" +
+                    "<td>" + secondsAmount(final_seconds) + "</td>" +
+                    "<td>" + buttons + "</td>" +
+                    "</tr>");
+
             });
-
-            var date = setTimeZero(new Date(moment(datefrom.val() + "Z", "D/M/YYYYZ")._d));
-
-            var todate = setTimeZero(new Date(moment(dateto.val() + "Z", "D/M/YYYYZ")._d));
-
-            table.attr('style', 'width:100%');
-            todayP.text(secondsAmount(todaySeconds));
-            thisMonthP.text(secondsAmount(thisMonthSeconds));
-            thisWeekP.text(secondsAmount(thisWeekSeconds));
-            unregisteredDaysP.text(unregistered_days);
-            thisRangeExpectedP.text(secondsAmount(expected_hours * 60));
-            warningDaysP.text(warning_days);
-            var todaydate = getOnlyDate();
-            if (todaydate >= date && todaydate <= todate) {
-                todayP.parent().parent().parent().show();
-            } else {
-                todayP.parent().parent().parent().hide();
-            }
-
-
-            var tmp_dateWeek = new Date(mindateweek);
-            tmp_dateWeek.setUTCDate(tmp_dateWeek.getUTCDate() + 4);
-            if (mindateweek >= date && tmp_dateWeek <= todate) {
-                thisWeekP.parent().parent().parent().show();
-            } else {
-                thisWeekP.parent().parent().parent().hide();
-            }
-
-            table.DataTable({
-                "order": [[2, "desc"]],
-                "scrollX": true,
-                responsive: true,
-                "columnDefs": [
-                    {"orderable": false, "targets": [0, 10]}
-                ]
-            });
-            if (!adm) {
-                var dp = $('#datetimepicker');
-                dp.datetimepicker('destroy');
-                dp.datetimepicker({
-                    format: 'L',
-                    locale: 'es',
-                    daysOfWeekDisabled: [0, 6],
-                    disabledDates: disabledDates
-                });
-                dp.datetimepicker('maxDate', moment());
-            }
-
-            $('#report_card').show();
-
-            if (adm) {
-                $('#loading_card').parent().parent().hide();
-            } else {
-                $('#register_card').show();
-                $('#loading_card').hide();
-            }
-
-            table.DataTable().columns.adjust().draw();
-            busy = false;
-        } else {
-            notify("Error connecting to the server!", "error");
         }
-    }).fail(function () {
-        notify("Error connecting to the server!", "error");
+
+
+        users.forEach(function (user) {
+            if (current_search === -2 || user.id === current_search) {
+                var date = setTimeZero(new Date(moment(datefrom.val() + "Z", "D/M/YYYYZ")._d));
+                var todate = setTimeZero(new Date(moment(dateto.val() + "Z", "D/M/YYYYZ")._d));
+                do {
+                    if (date.getUTCDay() !== 0 && date.getUTCDay() !== 6 && !insideEvent(parseInt(date.getTime() / 1000), user.id)) {
+                        expected_hours += user.mins;
+
+                        var found = false;
+                        for (var k = 0; k < current_time_data.length; k++) {
+                            var row = current_time_data[k];
+                            var rowdate = setTimeZero(new Date(row.date * 1000));
+                            if (row.user === user.id && rowdate.getTime() === date.getTime()) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            unregistered_days++;
+                        }
+                    }
+                    date.setUTCDate(date.getUTCDate() + 1);
+                }
+                while (date.getTime() <= todate.getTime());
+            }
+        });
+
+        var date = setTimeZero(new Date(moment(datefrom.val() + "Z", "D/M/YYYYZ")._d));
+
+        var todate = setTimeZero(new Date(moment(dateto.val() + "Z", "D/M/YYYYZ")._d));
+
+        table.attr('style', 'width:100%');
+        todayP.text(secondsAmount(todaySeconds));
+        thisMonthP.text(secondsAmount(thisMonthSeconds));
+        thisWeekP.text(secondsAmount(thisWeekSeconds));
+        unregisteredDaysP.text(unregistered_days);
+        thisRangeExpectedP.text(secondsAmount(expected_hours * 60));
+        warningDaysP.text(warning_days);
+        var todaydate = getOnlyDate();
+        if (todaydate >= date && todaydate <= todate) {
+            todayP.parent().parent().parent().show();
+        } else {
+            todayP.parent().parent().parent().hide();
+        }
+
+
+        var tmp_dateWeek = new Date(mindateweek);
+        tmp_dateWeek.setUTCDate(tmp_dateWeek.getUTCDate() + 4);
+        if (mindateweek >= date && tmp_dateWeek <= todate) {
+            thisWeekP.parent().parent().parent().show();
+        } else {
+            thisWeekP.parent().parent().parent().hide();
+        }
+
+        table.DataTable({
+            "order": [[2, "desc"]],
+            "scrollX": true,
+            responsive: true,
+            "columnDefs": [
+                {"orderable": false, "targets": [0, 10]}
+            ]
+        });
+        if (!adm) {
+            var dp = $('#datetimepicker');
+            dp.datetimepicker('destroy');
+            dp.datetimepicker({
+                format: 'L',
+                locale: 'es',
+                daysOfWeekDisabled: [0, 6],
+                disabledDates: disabledDates
+            });
+            dp.datetimepicker('maxDate', moment());
+        }
+
+        $('#report_card').show();
+
+        if (adm) {
+            $('#loading_card').parent().parent().hide();
+        } else {
+            $('#register_card').show();
+            $('#loading_card').hide();
+        }
+
+        table.DataTable().columns.adjust().draw();
+        busy = false;
     });
 }
 
 function loadEvents(cb) {
-    $.get(url + "api/events", function (data) {
-        if (data.length > 0) {
-            var result = null;
-            try {
-                result = JSON.parse(data);
-            } catch (e) {
-                notify("Error connecting to the server!", "error");
-                return;
-            }
-            events = result.data;
-            cb(updatePanel);
-        } else {
-            notify("Error connecting to the server!", "error");
-        }
-    }).fail(function () {
-        notify("Error connecting to the server!", "error");
+    request('get',url + "api/events",undefined,function (result) {
+        events = result.data;
+        cb(updatePanel);
     });
 }
 
@@ -367,67 +347,37 @@ function registerDay(e, full) {
     } else {
         path = "api/edit/" + current_edit_id;
     }
-
-    $.post(url + path, full ? {
+    request('post',url + path,full ? {
             date: date,
             from_hour: from_hour,
             to_hour: to_hour,
             breaktime: breaktime,
-            comment: comment,
-            _token: csrf
-        }
-        :
-        {comment: comment, _token: csrf}, function (response) {
-        if (response.length > 0) {
-            var result = null;
-            try {
-                result = JSON.parse(response);
-            } catch (e) {
-                notify("Error connecting to the server!", "error");
-                return;
-            }
-            if (result.status === "ok") {
-                register_modal.modal('hide');
-                updatePanel();
-                if (current_edit_id === 0) {
-                    notify("Report registered", "success");
-                } else {
-                    notify("Success", "success");
-                }
+            comment: comment
+        }:{comment: comment},function (result) {
+        if (result.status === "ok") {
+            register_modal.modal('hide');
+            updatePanel();
+            if (current_edit_id === 0) {
+                notify("Report registered", "success");
             } else {
-                showRegisterError(result.msg);
+                notify("Success", "success");
             }
         } else {
-            notify("Error connecting to the server!", "error");
+            showRegisterError(result.msg);
         }
-    }).fail(function (e) {
-        notify("Error connecting to the server!", "error");
     });
 }
 
 function enableOneEdit(e,id) {
     e.preventDefault();
     var btn = e.currentTarget;
-    $.post(url + "api/editable/"+id,{_token: csrf}, function (response) {
-        if (response.length > 0) {
-            var result = null;
-            try {
-                result = JSON.parse(response);
-            } catch (e) {
-                notify("Error connecting to the server!", "error");
-                return;
-            }
-            if (result.status === "ok") {
-                $(btn).hide();
-                notify("Success", "success");
-            } else {
-                notify(result.msg, "error");
-            }
+    request('post',url + "api/editable/"+id,{},function (result) {
+        if (result.status === "ok") {
+            $(btn).hide();
+            notify("Success", "success");
         } else {
-            notify("Error connecting to the server!", "error");
+            notify(result.msg, "error");
         }
-    }).fail(function (e) {
-        notify("Error connecting to the server!", "error");
     });
 }
 
@@ -467,26 +417,13 @@ function editCommentModal(e, id, full, f, t, b,date) {
 }
 
 function loadUsers(cb) {
-    $.get(url + "api/user" + (adm ? "s" : ""), function (data) {
-        if (data.length > 0) {
-            var result = null;
-            try {
-                result = JSON.parse(data);
-            } catch (e) {
-                notify("Error connecting to the server!", "error");
-                return;
-            }
-            if (adm) {
-                users = result.data;
-            } else {
-                users.push(result.data);
-            }
-            cb();
+    request('get',url + "api/user" + (adm ? "s" : ""),undefined,function (result) {
+        if (adm) {
+            users = result.data;
         } else {
-            notify("Error connecting to the server!", "error");
+            users.push(result.data);
         }
-    }).fail(function () {
-        notify("Error connecting to the server!", "error");
+        cb();
     });
 }
 

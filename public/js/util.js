@@ -67,14 +67,6 @@ function daysInMonth (month, year) {
     return moment(year+"-"+format2digits(month), "YYYY-MM").daysInMonth();
 }
 
-//pasa a columna de csv
-function _c(val,c){
-    if (c===undefined){
-        c=1;
-    }
-    return "\""+val.replace(/"/g,"\"\"").replace(/&lt;/g,"<").replace(/&gt;/g,">")+"\""+(c===1?",":"");
-}
-
 function getOnlyDate(){
     var result=new Date();
     return setTimeZero(result);
@@ -111,4 +103,26 @@ function b64toBlob(b64Data, contentType, sliceSize) {
     }
 
     return new Blob(byteArrays, {type: contentType});
+}
+function request(type, url,data, cb) {
+    if (data!==undefined){
+        data._token=csrf;
+    }
+
+    $[type](url,data, function (response) {
+        if (response.length > 0) {
+            var result = null;
+            try {
+                result = JSON.parse(response);
+            } catch (e) {
+                notify("Error connecting to the server!", "error");
+                return;
+            }
+            cb(result);
+        } else {
+            notify("Error connecting to the server!", "error");
+        }
+    }).fail(function (e) {
+        notify("Error connecting to the server!", "error");
+    });
 }
