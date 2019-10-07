@@ -42,8 +42,14 @@ class ApiController extends Controller
         if ($comment===null){
             $comment="";
         }
-        if ($date>new DateTime()){
-            return $this->response(200,array('status'=>'error','msg'=>'Wrong date'));
+
+        $dw = intval(date("w", $date->getTimestamp()));
+        if ($dw === 0 || $dw === 6){
+            return $this->response(200,array('status'=>'error','msg'=>'You can\'t register a weekend day'));
+        }
+
+        if ($date->getTimestamp()>(new DateTime())->getTimestamp()){
+            return $this->response(200,array('status'=>'error','msg'=>'This date is in the future, you can\'t register future dates'));
         }
 
         if ($breaktime<0||$to_hour-$from_hour<$breaktime){
@@ -207,8 +213,17 @@ class ApiController extends Controller
 
         $approved = 0;
         $usr = $user->id;
-        $datefrom = intval($request["datefrom"]);
-        $dateto = intval($request["dateto"]);
+
+        $datefrom = new DateTime();
+        $datefrom->setTimestamp(intval($request["datefrom"]));
+        $datefrom->setTime(0,0,0);
+        $datefrom = $datefrom->getTimestamp();
+
+        $dateto = new DateTime();
+        $dateto->setTimestamp(intval($request["dateto"]));
+        $dateto->setTime(0,0,0);
+        $dateto = $dateto->getTimestamp();
+
         $comment = $request["comment"];
         $fest = intval($request["fest"]);
 
