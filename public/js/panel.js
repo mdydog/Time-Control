@@ -516,12 +516,15 @@ $(document).ready(function () {
     });
 
     btn_export_totals.click(function () {
-        var doc = "Name,From,To,\"Registered Hours\",\"Expected Hours\",\"Registered Days\",\"Unregistered Days\",\"Warning Days\"\r\n";
+        var book = XLSX.utils.book_new();
+        book.SheetNames.push("Sheet");
+        var sheet_data = [["Name","From","To","Registered Hours","Expected Hours","Registered Days","Unregistered Days","Warning Days"]];
         var from = dateFormat(moment(datefrom.val() + "Z", "D/M/YYYYZ")._d, false);
         var to = dateFormat(moment(dateto.val() + "Z", "D/M/YYYYZ")._d, false);
         for (var i = 0; i < users.length; i++) {
             var user = users[i];
             if (current_search === -2 || user.id === current_search) {
+
                 var registeredHours = 0;
                 var expectedHours = 0;
                 var registeredDays = 0;
@@ -567,21 +570,29 @@ $(document).ready(function () {
 
                 expectedHours = secondsAmount(expectedHours*60);
 
-
-                doc += _c(user.name) + _c(from) + _c(to) + _c(registeredHours + "") + _c(expectedHours + "") + _c(registeredDays + "") + _c(unregisteredDays + "") + _c(warningDays + "", 0) + "\r\n";
+                var sheet_row = [];
+                sheet_row.push(user.name);
+                sheet_row.push(from);
+                sheet_row.push(to);
+                sheet_row.push(registeredHours);
+                sheet_row.push(expectedHours);
+                sheet_row.push(registeredDays);
+                sheet_row.push(unregisteredDays);
+                sheet_row.push(warningDays);
+                sheet_data.push(sheet_row);
             }
         }
-        var data = new Blob([doc], {type: 'text/csv'});
-
+        book.Sheets.Sheet=XLSX.utils.aoa_to_sheet(sheet_data);
+        var blob_data = XLSX.write(book, {bookType:'xlsx', bookSST:true, type: 'base64'})
         var dt = new Date();
-        var fname = "Export_Totals_" + dt.getFullYear() + "_" + (dt.getUTCMonth() + 1) + "_" + dt.getUTCDate() + ".csv";
-        if (navigator.appVersion.toString().indexOf('.NET') > 0) {
-            window.navigator.msSaveBlob(data, fname);
+        var fname = "Export_Totals_" + dt.getFullYear() + "_" + (dt.getUTCMonth() + 1) + "_" + dt.getUTCDate() + ".xlsx";
+        if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+            var blob = b64toBlob(blob_data,"application/xlsx");
+            window.navigator.msSaveOrOpenBlob(blob, fname);
         } else {
-            var url = window.URL.createObjectURL(data);
             var a = document.createElement("a");
             a.style = "display: none";
-            a.href = url;
+            a.href = "data:application/xlsx;base64,"+blob_data;
             a.download = fname;
             document.body.appendChild(a);
             a.click();
@@ -592,22 +603,34 @@ $(document).ready(function () {
     });
 
     btn_export.on('click', function () {
-        var doc = "\"Name\",\"Date\",\"Start Hour\",\"End Hour\",Comments,\"Registration Date\",\"Total Time\",\"Total Break Time\",\"Total Spend\"\r\n";//",\"Integrity\",\"Sign\",\"RSA Pub Key\"\r\n";
+        var book = XLSX.utils.book_new();
+        book.SheetNames.push("Sheet");
+        var sheet_data = [["Name","Date","Start Hour","End Hour","Comments","Registration Date","Total Time","Total Break Time","Total Spend"]];
         table.DataTable().rows({search: 'applied'}).every(function (rowIdx, tableLoop, rowLoop) {
             var d = this.data();
-            doc += _c(d[1]) + _c(d[2]) + _c(d[3]) + _c(d[4]) + _c($.parseHTML(d[5])[0].innerHTML) + _c(d[6]) + _c(d[7]) + _c(d[8]) + _c(d[9], 0) + "\r\n";
+            var sheet_row = [];
+            sheet_row.push(d[1]);
+            sheet_row.push(d[2]);
+            sheet_row.push(d[3]);
+            sheet_row.push(d[4]);
+            sheet_row.push($.parseHTML(d[5])[0].innerHTML);
+            sheet_row.push(d[6]);
+            sheet_row.push(d[7]);
+            sheet_row.push(d[8]);
+            sheet_row.push(d[9]);
+            sheet_data.push(sheet_row);
         });
-        var data = new Blob([doc], {type: 'text/csv'});
-
+        book.Sheets.Sheet=XLSX.utils.aoa_to_sheet(sheet_data);
+        var blob_data = XLSX.write(book, {bookType:'xlsx', bookSST:true, type: 'base64'})
         var dt = new Date();
-        var fname = "Export_" + dt.getFullYear() + "_" + (dt.getUTCMonth() + 1) + "_" + dt.getUTCDate() + ".csv";
-        if (navigator.appVersion.toString().indexOf('.NET') > 0) {
-            window.navigator.msSaveBlob(data, fname);
+        var fname = "Export_" + dt.getFullYear() + "_" + (dt.getUTCMonth() + 1) + "_" + dt.getUTCDate() + ".xlsx";
+        if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+            var blob = b64toBlob(blob_data,"application/xlsx");
+            window.navigator.msSaveOrOpenBlob(blob, fname);
         } else {
-            var url = window.URL.createObjectURL(data);
             var a = document.createElement("a");
             a.style = "display: none";
-            a.href = url;
+            a.href = "data:application/xlsx;base64,"+blob_data;
             a.download = fname;
             document.body.appendChild(a);
             a.click();

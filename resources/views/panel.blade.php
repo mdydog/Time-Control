@@ -132,7 +132,7 @@
                     <div class="row">
                         <div class="col-md-12">
                             @if(Auth::user()->isInAnyGroup([2,3]) && Request::is('admin'))
-                                <button class="btn btn-primary" id="btn_export">Export CSV</button>
+                                <button class="btn btn-primary" id="btn_export">Export Excel</button>
                                 <button class="btn btn-primary" id="btn_export_totals">Export Totals</button>
                                 <label style="margin-left: 20px">Select User: </label>
                                 <select id="usr_list" class="custom-select" style="width: auto;">
