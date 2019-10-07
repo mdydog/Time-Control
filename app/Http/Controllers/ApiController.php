@@ -79,13 +79,13 @@ class ApiController extends Controller
         $user = Auth::user();
 
         if ($user->isInGroup(2)){
-            $rows = Event::where('from','>',time())->orWhere('to','>',time())->orWhere('approved','=',0)->orderBy('from','asc')->get()->all();
+            $rows = Event::orderBy('from','asc')->get()->all();
         }
         elseif ($user->isInGroup(3)){
-            $rows = DB::select("select * from events where (events.from > ".time()." or events.to > ".time()." or approved = 0) and (user is null or user in (select id from users where supervisor = ?) or user = ?) order by events.from asc",[Auth::id(),Auth::id()]);
+            $rows = DB::select("select * from events where (user is null or user in (select id from users where supervisor = ?) or user = ?) order by events.from asc",[Auth::id(),Auth::id()]);
         }
         else{
-            $rows = DB::select("select * from events where (events.from > ".time()." or events.to > ".time()." or approved = 0) and  (user is null or user = ?) order by events.from asc",[Auth::id()]);
+            $rows = DB::select("select * from events where (user is null or user = ?) order by events.from asc",[Auth::id()]);
         }
 
         return $this->response(200,array('status'=>'ok','data'=>$rows));

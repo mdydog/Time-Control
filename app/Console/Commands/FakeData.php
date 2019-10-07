@@ -65,7 +65,7 @@ class FakeData extends Command
             'group' => 3
         ]);
 
-        $this->generateTimes($faker,$u1->id,$mins);
+        $this->generateTimes($faker,$u1->id,$mins[$sm]);
 
 
         $nusers=$faker->numberBetween(8,22);
@@ -84,7 +84,7 @@ class FakeData extends Command
                 'group' => 1
             ]);
 
-            $this->generateTimes($faker,$c_user->id,$mins);
+            $this->generateTimes($faker,$c_user->id,$mins[$sm]);
         }
         echo "Done";
         return;

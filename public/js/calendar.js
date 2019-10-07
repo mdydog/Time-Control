@@ -29,7 +29,10 @@ function updateCalendar(){
             }
             if (result.status === "ok"){
                 result.data.forEach(function(row){
-                    insertEvent(row)
+                    var now =parseInt((setTimeZero(new Date())).getTime()/1000);
+                    if (parseInt(row.from) >= now || parseInt(row.to) >= now){
+                        insertEvent(row);
+                    }
                 });
             }
         }
