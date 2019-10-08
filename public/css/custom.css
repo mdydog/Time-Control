@@ -102,3 +102,10 @@ pre {
 .notifyjs-bootstrap-base{
     padding-left: 14px !important;
 }
+.disable-select {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+    user-select: none;
+}

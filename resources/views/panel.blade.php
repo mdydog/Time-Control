@@ -128,36 +128,42 @@
         <div class="row mt-3 mb-3">
             <div class="col-md-12">
                 <div id="report_card" class="card p-4" style="display: none">
-                    <h2>History</h2>
-                    <div class="row">
-                        <div class="col-md-12">
-                            @if(Auth::user()->isInAnyGroup([2,3]) && Request::is('admin'))
-                                <button class="btn btn-primary" id="btn_export">Export Excel</button>
-                                <button class="btn btn-primary" id="btn_export_totals">Export Totals</button>
-                                <label style="margin-left: 20px">Select User: </label>
-                                <select id="usr_list" class="custom-select" style="width: auto;">
-                                    <option value="-2">All</option>
-                                    @php
-                                        if (Auth::user()->isInGroup(2)){
-                                            $users = User::all();
-                                            foreach ($users as $user){
-                                                echo '<option value="'.$user->id.'">'.$user->name.'</option>';
-                                            }
-                                        }
-                                        else{
-                                            $users = User::where('supervisor','=',Auth::id())->get()->all();
-                                            foreach ($users as $user){
-                                                echo '<option value="'.$user->id.'">'.$user->name.'</option>';
-                                            }
-                                        }
-                                    @endphp
-                                </select>
 
-                            @endif
-                            <span>Range from: <input id="datepickerfrom" autocomplete="off" type="text" class="form-control datetimepicker-input" style="display:inline;width:auto;"  data-toggle="datetimepicker" data-target="#datepickerfrom"/> To: <input id="datepickerto" autocomplete="off" type="text" class="form-control datetimepicker-input" style="display:inline;width:auto;"  data-toggle="datetimepicker" data-target="#datepickerto"/></span>
+                    <div class="row">
+                        <div class="col-md-12 disable-select">
+                            <span style="font-size: 2em">History</span>
                             @if(Auth::user()->isInAnyGroup([2,3]) && Request::is('admin'))
-                                <input type="checkbox" id="hide_current"/><label for="hide_current">Hide my user from history</label>
+                                <button class="btn btn-primary btn-sm float-right ml-2" id="btn_export">Export Excel</button>
+                                <button class="btn btn-primary btn-sm float-right ml-2" id="btn_export_totals">Export Totals</button>
+                                <i class="fas fa-filter" style="border: 1px solid lightgray;padding:4px;border-radius: 4px;cursor:pointer" onclick="event.preventDefault();$('#filters').toggle()"></i>
                             @endif
+                            <div id="filters">
+                                @if(Auth::user()->isInAnyGroup([2,3]) && Request::is('admin'))
+                                    <hr>
+                                    <label>Select User: </label>
+                                    <select id="usr_list" class="custom-select" style="width: auto;">
+                                        <option value="-2">All</option>
+                                        @php
+                                            if (Auth::user()->isInGroup(2)){
+                                                $users = User::all();
+                                                foreach ($users as $user){
+                                                    echo '<option value="'.$user->id.'">'.$user->name.'</option>';
+                                                }
+                                            }
+                                            else{
+                                                $users = User::where('supervisor','=',Auth::id())->get()->all();
+                                                foreach ($users as $user){
+                                                    echo '<option value="'.$user->id.'">'.$user->name.'</option>';
+                                                }
+                                            }
+                                        @endphp
+                                    </select><br><br>
+                                @endif
+                                <span>Range from: <input id="datepickerfrom" autocomplete="off" type="text" class="form-control datetimepicker-input" style="display:inline;width:auto;"  data-toggle="datetimepicker" data-target="#datepickerfrom"/> To: <input id="datepickerto" autocomplete="off" type="text" class="form-control datetimepicker-input" style="display:inline;width:auto;"  data-toggle="datetimepicker" data-target="#datepickerto"/></span>
+                                @if(Auth::user()->isInAnyGroup([2,3]) && Request::is('admin'))
+                                    <br><br><input type="checkbox" id="hide_current"/><label for="hide_current">Hide my user from history</label>
+                                @endif
+                            </div>
                         </div>
                     </div>
 
