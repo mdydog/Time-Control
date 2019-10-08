@@ -47,8 +47,6 @@ If your want to generate fake data
 
     php artisan fake:data
     
-Note: Every fake data execution will generate a supervisor with 8-22 employee with 1 year history records from 01/01/2019 to 04/10/2019
-
 To regenerate database (drop everything and make every table and the master account again)
 
     php artisan migrate:rollback
