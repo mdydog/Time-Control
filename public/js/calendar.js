@@ -49,12 +49,12 @@ function insertEvent(event){
     if (current_user.admin && event.approved===0){
         adm_btn="<div class=\"text-right\"><button class=\"btn btn-primary btn-sm\" onclick=\"setEventStatus(event,1,"+event.id+")\">Accept</button> <button class=\"btn btn-danger btn-sm\" onclick=\"setEventStatus(event,2,"+event.id+")\">Reject</button></div>"
     }
-    var html = "<li"+(cs!==""?" onclick=\"go("+(event.from*1000)+")\" class=\""+cs+"\"":"")+">"+event.comment.replace(/</g, "&lt;").replace(/>/g, "&gt;")+approved_label+adm_btn+date_ranges+"</li>";
+    var html = "<li"+(cs!==""?" onclick=\"go("+(event.from*1000)+")\" class=\""+cs+"\"":"")+">"+fixXSS(event.comment)+approved_label+adm_btn+date_ranges+"</li>";
     if (event.approved!==2){
         var edate=new Date(event.to*1000);
         edate.setUTCDate(edate.getUTCDate()+1);
         calendar.addEvent({
-            title: event.comment.replace(/</g, "&lt;").replace(/>/g, "&gt;"),
+            title: fixXSS(event.comment),
             start: new Date(event.from*1000),
             end: edate,
             allDay: true,

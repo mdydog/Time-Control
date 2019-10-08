@@ -144,3 +144,11 @@ function getUnixFromDatepicker(datepicker) {
 function dateZeroFromDatepicker(datepicker){
     return setTimeZero(new Date(dateFromDatepicker(datepicker)));
 }
+
+function sameDate(date1,date2){
+    return date1.getUTCDate() === date2.getUTCDate() && date1.getUTCMonth() === date2.getUTCMonth() && date1.getFullYear() === date2.getFullYear();
+}
+
+function fixXSS(text){
+    return text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}

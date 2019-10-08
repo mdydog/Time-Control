@@ -69,6 +69,7 @@ function clearCurrentData() {
     expected_hours = 0;
     unregistered_days = 0;
     current_time_data = [];
+    disabledDates = [];
 }
 
 function updatePanel() {
@@ -90,79 +91,11 @@ function updatePanel() {
         var mindateweek = getOnlyDate();
         mindateweek.setUTCDate(mindateweek.getUTCDate() - mindateweek.getUTCDay() + 1);
 
-        disabledDates = [];
         if (result.status === "ok") {
             current_time_data = result.data;
             result.data.forEach(function (row) {
                 if (!(admin_panel_mode && hide_current.is(":checked") && row.user === current_user.id)){ //hide current user
-                    var sdate = new Date(row.date * 1000);
-                    disabledDates.push(sdate);
-                    var diffSeconds = row.end_hour - row.start_hour;
-                    var totalseconds = diffSeconds - row.breaktime;
-                    if (sdate.getUTCDate() === new Date().getUTCDate() && sdate.getUTCMonth() === new Date().getUTCMonth() && sdate.getFullYear() === new Date().getFullYear()) {
-                        todaySeconds += totalseconds;
-                    }
-
-                    thisMonthSeconds += totalseconds;
-                    if (sdate >= mindateweek) {
-                        thisWeekSeconds += totalseconds;
-                    }
-
-                    var date = dateFormat(sdate, false);
-                    var start = secondsAmount(row.start_hour, false, true);
-                    var end = secondsAmount(row.end_hour, false, true);
-                    var comment = row.comment===null?"":row.comment.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                    var regisDate = dateFormat(new Date(row.register_date * 1000));
-                    var final_seconds = totalseconds;
-
-
-                    var buttons = "";
-                    if (admin_panel_mode) {
-                        if (row.editable===0){
-                            buttons = "<i class=\"fas fa-highlighter click\" onclick=\"enableOneEdit(event,"+row.id+")\" title='Enable one time edit mode'></i>";
-                        }
-                    } else {
-                        if (dateFormat(new Date(), false) === regisDate || row.editable) {
-                            buttons = "<i class=\"fas fa-edit click fa-ok\" title='Edit' onclick='editCommentModal(event," + row.id + ",true," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
-                        } else {
-                            buttons = "<i class=\"fas fa-edit click\" title='Edit comment' onclick='editCommentModal(event," + row.id + ",false," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
-                        }
-                    }
-
-                    var maxfseconds = 0;
-                    for (var u = 0; u < users.length; u++) {
-                        if (users[u].id === row.user) {
-                            maxfseconds = users[u].mins * 60;
-                            break;
-                        }
-                    }
-
-                    var status_icon = "";
-                    if (final_seconds > maxfseconds) {
-                        status_icon = "<i class=\"fas fa-exclamation-triangle fa-warning\" title='Too much time in your working day!'></i>";
-                        warning_days++;
-                    } else if (date !== regisDate) {
-                        status_icon = "<i class=\"fas fa-exclamation-triangle fa-warning\" title=\"Your registration date was after your working date! Don't do that!!\"></i>";
-                        warning_days++;
-                    } else {
-                        status_icon = "<i class=\"fas fa-check-circle fa-ok\" title='Everything ok'></i>";
-                    }
-
-
-                    table.append("<tr>" +
-                        "<td>" + status_icon + "</td>" +
-                        "<td>" + row.name + "</td>" +
-                        "<td>" + date + "</td>" +
-                        "<td>" + start + "</td>" +
-                        "<td>" + end + "</td>" +
-                        "<td><pre style='max-width: 250px;max-height: 150px;' id='comment" + row.id + "'>" + comment + "</pre></td>" +
-                        "<td>" + regisDate + "</td>" +
-                        "<td>" + secondsAmount(diffSeconds) + "</td>" +
-                        "<td>" + secondsAmount(row.breaktime) + "</td>" +
-                        "<td>" + secondsAmount(final_seconds) + "</td>" +
-                        "<td>" + buttons + "</td>" +
-                        "</tr>");
-
+                    insertHistoryRow(row,mindateweek);
                 }
             });
         }
@@ -217,6 +150,76 @@ function updatePanel() {
         table.DataTable().columns.adjust().draw();
         busy = false;
     });
+}
+
+function insertHistoryRow(row,minimun_date_week){
+    var sdate = new Date(row.date * 1000);
+    disabledDates.push(sdate);
+    var diffSeconds = row.end_hour - row.start_hour;
+    var totalseconds = diffSeconds - row.breaktime;
+    if (sameDate(sdate,new Date())) {
+        todaySeconds += totalseconds;
+    }
+
+    thisMonthSeconds += totalseconds;
+    if (sdate >= minimun_date_week) {
+        thisWeekSeconds += totalseconds;
+    }
+
+    var date = dateFormat(sdate, false);
+    var start = secondsAmount(row.start_hour, false, true);
+    var end = secondsAmount(row.end_hour, false, true);
+    var comment = row.comment===null?"":fixXSS(row.comment);
+    var regisDate = dateFormat(new Date(row.register_date * 1000));
+    var final_seconds = totalseconds;
+
+
+    var buttons = "";
+    if (admin_panel_mode) {
+        if (row.editable===0){
+            buttons = "<i class=\"fas fa-highlighter click\" onclick=\"enableOneEdit(event,"+row.id+")\" title='Enable one time edit mode'></i>";
+        }
+    } else {
+        if (dateFormat(new Date(), false) === regisDate || row.editable) {
+            buttons = "<i class=\"fas fa-edit click fa-ok\" title='Edit' onclick='editCommentModal(event," + row.id + ",true," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
+        } else {
+            buttons = "<i class=\"fas fa-edit click\" title='Edit comment' onclick='editCommentModal(event," + row.id + ",false," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
+        }
+    }
+
+    var maxfseconds = 0;
+    for (var u = 0; u < users.length; u++) {
+        if (users[u].id === row.user) {
+            maxfseconds = users[u].mins * 60;
+            break;
+        }
+    }
+
+    var status_icon = "";
+    if (final_seconds > maxfseconds) {
+        status_icon = "<i class=\"fas fa-exclamation-triangle fa-warning\" title='Too much time in your working day!'></i>";
+        warning_days++;
+    } else if (date !== regisDate) {
+        status_icon = "<i class=\"fas fa-exclamation-triangle fa-warning\" title=\"Your registration date was after your working date! Don't do that!!\"></i>";
+        warning_days++;
+    } else {
+        status_icon = "<i class=\"fas fa-check-circle fa-ok\" title='Everything ok'></i>";
+    }
+
+
+    table.append("<tr>" +
+        "<td>" + status_icon + "</td>" +
+        "<td>" + row.name + "</td>" +
+        "<td>" + date + "</td>" +
+        "<td>" + start + "</td>" +
+        "<td>" + end + "</td>" +
+        "<td><pre style='max-width: 250px;max-height: 150px;' id='comment" + row.id + "'>" + comment + "</pre></td>" +
+        "<td>" + regisDate + "</td>" +
+        "<td>" + secondsAmount(diffSeconds) + "</td>" +
+        "<td>" + secondsAmount(row.breaktime) + "</td>" +
+        "<td>" + secondsAmount(final_seconds) + "</td>" +
+        "<td>" + buttons + "</td>" +
+        "</tr>");
 }
 
 function periodExpectedCalculation(rdate,rtodate,user){
@@ -489,7 +492,8 @@ $(document).ready(function () {
                 for (var k = 0; k < current_time_data.length; k++) {
                     var row = current_time_data[k];
                     if (row.user === user.id) {
-                        if (row.end_hour - row.start_hour - row.breaktime > user.mins * 60 || setTimeZero(new Date(row.date * 1000)).getTime() !== setTimeZero(new Date(row.register_date * 1000)).getTime()) {
+                        if (row.end_hour - row.start_hour - row.breaktime > user.mins * 60 ||
+                            setTimeZero(new Date(row.date * 1000)).getTime() !== setTimeZero(new Date(row.register_date * 1000)).getTime()) {
                             warningDays++;
                         }
                         registeredDays++;
