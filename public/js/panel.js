@@ -584,6 +584,7 @@ $(document).ready(function () {
     dateto.off('keypress').keypress(function (e) {
         return false;
     });
+
     datefrom.datetimepicker({
         format: 'L',
         defaultDate: new Date().setUTCDate(1),
@@ -595,7 +596,7 @@ $(document).ready(function () {
         format: 'L',
         defaultDate: new Date().setUTCDate(daysInMonth(new Date().getUTCMonth() + 1, new Date().getFullYear())),
         locale: 'es',
-        minDate: new Date().setUTCDate(1)
+        minDate: new Date().setUTCDate(0)
     });
     datefrom.on("change.datetimepicker", function (e) {
         if (moment(dateto.val() + "Z", "D/M/YYYYZ")._d.getTime()<moment(datefrom.val() + "Z", "D/M/YYYYZ")._d.getTime()){

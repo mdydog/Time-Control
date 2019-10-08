@@ -42,8 +42,7 @@ function insertEvent(event){
     else if (event.approved===2){
         cs = "rejected";
     }
-    //.fullCalendar( ‘gotoDate’, date )
-    //calendar.gotoDate( date )
+
     var date_ranges=" <span>"+dateFormat(new Date(event.from*1000))+(event.from!==event.to?"-"+dateFormat(new Date(event.to*1000)):"")+"</span>";
     var approved_label=(event.approved===1||event.approved===2?"<span class=\"status\">("+cs.replace(cs.charAt(0),cs.charAt(0).toUpperCase())+")</span>":"");
     var adm_btn="";
@@ -133,20 +132,6 @@ $(document).ready(function(){
         selectable: false,
         firstDay: 1,
         selectMirror: false,
-        /*select: function(arg) {
-            var title = prompt('Event Title:');
-            if (title) {
-                calendar.addEvent({
-                    title: title,
-                    start: arg.start,
-                    end: arg.end,
-                    allDay: arg.allDay
-                })
-            }
-            console.log(arg.start.getTime());
-            console.log(arg.end.getTime());
-            calendar.unselect()
-        },*/
         editable: false,
         eventLimit: true, // allow "more" link when too many events
     });
@@ -156,6 +141,8 @@ $(document).ready(function(){
     var d = getOnlyDate();
     var d2 = getOnlyDate();
     d2.setUTCDate(d.getUTCDate()+1);
+    var dmin = getOnlyDate();
+    dmin.setUTCDate(d.getUTCDate()-1);
 
     datefrom.off('keypress').keypress(function (e) {
         return false;
@@ -175,7 +162,7 @@ $(document).ready(function(){
         format: 'L',
         defaultDate: d2,
         locale: 'es',
-        minDate: d
+        minDate: dmin
     });
     datefrom.on("change.datetimepicker", function (e) {
         if (moment(dateto.val() + "Z", "D/M/YYYYZ")._d.getTime()<moment(datefrom.val() + "Z", "D/M/YYYYZ")._d.getTime()){
@@ -183,9 +170,6 @@ $(document).ready(function(){
         }
         dateto.datetimepicker('minDate', e.date);
     });
-    //dateto.on("change.datetimepicker", function (e) {
-    //    datefrom.datetimepicker('maxDate', e.date);
-    //});
 
     btn_add_event.click(function (e) {
         e.preventDefault();
