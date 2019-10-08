@@ -1,5 +1,4 @@
 var table = $('#report');
-var cur_user_id = $('#cuid').val();
 
 var btn_add_user = $('#btn_add_user');
 var add_user_modal = $('#addEditUser');
@@ -13,9 +12,6 @@ var modal_user_supervisor = $('#usupervisor');
 var modal_user_active = $('#uactive');
 var modal_user_adminrole = $('#uroleadmin');
 var modal_user_supervisorrole = $('#urolesupervisor');
-
-
-
 
 function updatePanel(){
     table.DataTable().clear();
@@ -38,7 +34,7 @@ function updatePanel(){
                     groups_data+="<span rolid='"+row.groups[i]+"'>"+name+"</span>"+(i+1<row.groups.length?", ":"");
                 }
 
-                table.append("<tr><td>"+row.name+"</td><td>"+row.email+"</td><td>"+parseHour(row.mins)+"</td><td>"+(row.supervisor===null?"None":($('option[value=\"'+row.supervisor+'\"]').text()===""?"None":$('option[value=\"'+row.supervisor+'\"]').text()))+"</td><td><i class=\"fas "+(row.active===1?"fa-check\" style='font-size: 1.5em;color:mediumseagreen;'":"fa-times\" style='font-size: 1.5em;color:red;'")+"></i></td><td>"+groups_data+"</td><td>"+(parseInt(cur_user_id)!==parseInt(row.id)?"<i class=\"fas fa-user-edit\" style=\"font-size:1.5em;cursor:pointer;\" onclick=\"userModal(event,"+row.id+",'"+row.name+"','"+row.email+"',"+row.supervisor+","+row.active+",'"+row.groups+"','"+parseHour(row.mins)+"')\"></i>":"")+"</td></tr>");
+                table.append("<tr><td>"+row.name+"</td><td>"+row.email+"</td><td>"+parseHour(row.mins)+"</td><td>"+(row.supervisor===null?"None":($('option[value=\"'+row.supervisor+'\"]').text()===""?"None":$('option[value=\"'+row.supervisor+'\"]').text()))+"</td><td><i class=\"fas "+(row.active===1?"fa-check\" style='font-size: 1.5em;color:mediumseagreen;'":"fa-times\" style='font-size: 1.5em;color:red;'")+"></i></td><td>"+groups_data+"</td><td>"+(parseInt(current_user.id)!==parseInt(row.id)?"<i class=\"fas fa-user-edit\" style=\"font-size:1.5em;cursor:pointer;\" onclick=\"userModal(event,"+row.id+",'"+row.name+"','"+row.email+"',"+row.supervisor+","+row.active+",'"+row.groups+"','"+parseHour(row.mins)+"')\"></i>":"")+"</td></tr>");
             });
         }
 

@@ -152,8 +152,12 @@
                                         }
                                     @endphp
                                 </select>
+
                             @endif
                             <span>Range from: <input id="datepickerfrom" autocomplete="off" type="text" class="form-control datetimepicker-input" style="display:inline;width:auto;"  data-toggle="datetimepicker" data-target="#datepickerfrom"/> To: <input id="datepickerto" autocomplete="off" type="text" class="form-control datetimepicker-input" style="display:inline;width:auto;"  data-toggle="datetimepicker" data-target="#datepickerto"/></span>
+                            @if(Auth::user()->isInAnyGroup([2,3]) && Request::is('admin'))
+                                <input type="checkbox" id="hide_current"/><label for="hide_current">Hide my user from history</label>
+                            @endif
                         </div>
                     </div>
 

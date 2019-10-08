@@ -26,13 +26,14 @@ var current_search = -2;
 var usr_list_select = $('#usr_list');
 var btn_export = $('#btn_export');
 var btn_export_totals = $('#btn_export_totals');
-var adm = usr_list_select.length > 0;
 
 var events = null;
 var users = [];
 
 var datefrom = $('#datepickerfrom');
 var dateto = $('#datepickerto');
+
+var hide_current = $('#hide_current');
 
 var busy = false;
 
@@ -95,85 +96,82 @@ function updatePanel() {
         if (result.status === "ok") {
             current_time_data = result.data;
             result.data.forEach(function (row) {
-                var sdate = new Date(row.date * 1000);
-                disabledDates.push(sdate);
-                var diffSeconds = row.end_hour - row.start_hour;
-                var totalseconds = diffSeconds - row.breaktime;
-                if (sdate.getUTCDate() === new Date().getUTCDate() && sdate.getUTCMonth() === new Date().getUTCMonth() && sdate.getFullYear() === new Date().getFullYear()) {
-                    todaySeconds += totalseconds;
-                }
-                /*if (sdate.getUTCMonth() >= new Date(datefrom.datetimepicker('viewDate')._d).getUTCMonth() &&
-                    sdate.getUTCMonth() <= new Date(dateto.datetimepicker('viewDate')._d).getUTCMonth() &&
-                    sdate.getFullYear() >= new Date(datefrom.datetimepicker('viewDate')._d).getFullYear() &&
-                    sdate.getFullYear() <= new Date(dateto.datetimepicker('viewDate')._d).getFullYear()){
-                    thisMonthSeconds+=totalseconds;
-                }*/
-                thisMonthSeconds += totalseconds;
-                if (sdate >= mindateweek) {
-                    thisWeekSeconds += totalseconds;
-                }
-
-                var date = dateFormat(sdate, false);
-                var start = secondsAmount(row.start_hour, false, true);
-                var end = secondsAmount(row.end_hour, false, true);
-                var comment = row.comment===null?"":row.comment.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                var regisDate = dateFormat(new Date(row.register_date * 1000));
-                var final_seconds = totalseconds;
-
-
-                var buttons = "";
-                if (adm) {
-                    if (row.editable===0){
-                        buttons = "<i class=\"fas fa-highlighter\" onclick=\"enableOneEdit(event,"+row.id+")\" style='cursor:pointer;' title='Enable one time edit mode'></i>";
+                if (!(adm && hide_current.is(":checked") && row.user === current_user.id)){ //hide current user
+                    var sdate = new Date(row.date * 1000);
+                    disabledDates.push(sdate);
+                    var diffSeconds = row.end_hour - row.start_hour;
+                    var totalseconds = diffSeconds - row.breaktime;
+                    if (sdate.getUTCDate() === new Date().getUTCDate() && sdate.getUTCMonth() === new Date().getUTCMonth() && sdate.getFullYear() === new Date().getFullYear()) {
+                        todaySeconds += totalseconds;
                     }
-                } else {
-                    if (dateFormat(new Date(), false) === regisDate || row.editable) {
-                        buttons = "<i class=\"fas fa-edit\" style='cursor:pointer;color:greenyellow;text-shadow: 0 0 3px #000;' title='Edit' onclick='editCommentModal(event," + row.id + ",true," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
+
+                    thisMonthSeconds += totalseconds;
+                    if (sdate >= mindateweek) {
+                        thisWeekSeconds += totalseconds;
+                    }
+
+                    var date = dateFormat(sdate, false);
+                    var start = secondsAmount(row.start_hour, false, true);
+                    var end = secondsAmount(row.end_hour, false, true);
+                    var comment = row.comment===null?"":row.comment.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    var regisDate = dateFormat(new Date(row.register_date * 1000));
+                    var final_seconds = totalseconds;
+
+
+                    var buttons = "";
+                    if (adm) {
+                        if (row.editable===0){
+                            buttons = "<i class=\"fas fa-highlighter\" onclick=\"enableOneEdit(event,"+row.id+")\" style='cursor:pointer;' title='Enable one time edit mode'></i>";
+                        }
                     } else {
-                        buttons = "<i class=\"fas fa-edit\" style='cursor:pointer;' title='Edit comment' onclick='editCommentModal(event," + row.id + ",false," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
+                        if (dateFormat(new Date(), false) === regisDate || row.editable) {
+                            buttons = "<i class=\"fas fa-edit\" style='cursor:pointer;color:greenyellow;text-shadow: 0 0 3px #000;' title='Edit' onclick='editCommentModal(event," + row.id + ",true," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
+                        } else {
+                            buttons = "<i class=\"fas fa-edit\" style='cursor:pointer;' title='Edit comment' onclick='editCommentModal(event," + row.id + ",false," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
+                        }
                     }
-                }
 
-                var maxfseconds = 0;
-                for (var u = 0; u < users.length; u++) {
-                    if (users[u].id === row.user) {
-                        maxfseconds = users[u].mins * 60;
-                        break;
+                    var maxfseconds = 0;
+                    for (var u = 0; u < users.length; u++) {
+                        if (users[u].id === row.user) {
+                            maxfseconds = users[u].mins * 60;
+                            break;
+                        }
                     }
+
+                    var status_icon = "";
+                    if (final_seconds > maxfseconds) {
+                        status_icon = "<i class=\"fas fa-exclamation-triangle\" style='color:yellow;text-shadow: 0 0 3px #000;' title='Too much time in your working day!'></i>";
+                        warning_days++;
+                    } else if (date !== regisDate) {
+                        status_icon = "<i class=\"fas fa-exclamation-triangle\" style=\"color:yellow;text-shadow: 0 0 3px #000;\" title=\"Your registration date was after your working date! Don't do that!!\"></i>";
+                        warning_days++;
+                    } else {
+                        status_icon = "<i class=\"fas fa-check-circle\" style='color:greenyellow;text-shadow: 0 0 3px #000;' title='Everything ok'></i>";
+                    }
+
+
+                    table.append("<tr>" +
+                        "<td>" + status_icon + "</td>" +
+                        "<td>" + row.name + "</td>" +
+                        "<td>" + date + "</td>" +
+                        "<td>" + start + "</td>" +
+                        "<td>" + end + "</td>" +
+                        "<td><pre style='max-width: 250px;max-height: 150px;' id='comment" + row.id + "'>" + comment + "</pre></td>" +
+                        "<td>" + regisDate + "</td>" +
+                        "<td>" + secondsAmount(diffSeconds) + "</td>" +
+                        "<td>" + secondsAmount(row.breaktime) + "</td>" +
+                        "<td>" + secondsAmount(final_seconds) + "</td>" +
+                        "<td>" + buttons + "</td>" +
+                        "</tr>");
+
                 }
-
-                var status_icon = "";
-                if (final_seconds > maxfseconds) {
-                    status_icon = "<i class=\"fas fa-exclamation-triangle\" style='color:yellow;text-shadow: 0 0 3px #000;' title='Too much time in your working day!'></i>";
-                    warning_days++;
-                } else if (date !== regisDate) {
-                    status_icon = "<i class=\"fas fa-exclamation-triangle\" style=\"color:yellow;text-shadow: 0 0 3px #000;\" title=\"Your registration date was after your working date! Don't do that!!\"></i>";
-                    warning_days++;
-                } else {
-                    status_icon = "<i class=\"fas fa-check-circle\" style='color:greenyellow;text-shadow: 0 0 3px #000;' title='Everything ok'></i>";
-                }
-
-
-                table.append("<tr>" +
-                    "<td>" + status_icon + "</td>" +
-                    "<td>" + row.name + "</td>" +
-                    "<td>" + date + "</td>" +
-                    "<td>" + start + "</td>" +
-                    "<td>" + end + "</td>" +
-                    "<td><pre style='max-width: 250px;max-height: 150px;' id='comment" + row.id + "'>" + comment + "</pre></td>" +
-                    "<td>" + regisDate + "</td>" +
-                    "<td>" + secondsAmount(diffSeconds) + "</td>" +
-                    "<td>" + secondsAmount(row.breaktime) + "</td>" +
-                    "<td>" + secondsAmount(final_seconds) + "</td>" +
-                    "<td>" + buttons + "</td>" +
-                    "</tr>");
-
             });
         }
 
 
         users.forEach(function (user) {
-            if (current_search === -2 || user.id === current_search) {
+            if ((current_search === -2 || user.id === current_search) && !(adm && hide_current.is(":checked") && user.id === current_user.id)){
                 var date = setTimeZero(new Date(moment(datefrom.val() + "Z", "D/M/YYYYZ")._d));
                 var todate = setTimeZero(new Date(moment(dateto.val() + "Z", "D/M/YYYYZ")._d));
                 do {
@@ -460,7 +458,7 @@ $(document).ready(function () {
         var to = dateFormat(moment(dateto.val() + "Z", "D/M/YYYYZ")._d, false);
         for (var i = 0; i < users.length; i++) {
             var user = users[i];
-            if (current_search === -2 || user.id === current_search) {
+            if ((current_search === -2 || user.id === current_search) && !(adm && hide_current.is(":checked") && user.id === current_user.id)) {
 
                 var registeredHours = 0;
                 var expectedHours = 0;
@@ -586,8 +584,6 @@ $(document).ready(function () {
     dateto.off('keypress').keypress(function (e) {
         return false;
     });
-
-
     datefrom.datetimepicker({
         format: 'L',
         defaultDate: new Date().setUTCDate(1),
@@ -609,10 +605,13 @@ $(document).ready(function () {
         updatePanel();
     });
     dateto.on("change.datetimepicker", function (e) {
-        //datefrom.datetimepicker('maxDate', e.date);
         updatePanel();
     });
+    hide_current.change(function (e) {
+       updatePanel();
+    });
 
+    //Start to load all event/users/history resources from webserver
     loadEvents(loadUsers);
 });
 

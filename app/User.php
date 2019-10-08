@@ -48,4 +48,13 @@ class User extends Authenticatable
     public function isInAnyGroup($group_array){
         return count(Role::where('user', $this->id)->whereIn('group',$group_array)->get()->all())>0;
     }
+
+    public function groups(){
+        $result=[];
+        $rows = Role::where('user', $this->id)->get()->all();
+        foreach ($rows as $row){
+            $result[]=$row['group'];
+        }
+        return $result;
+    }
 }

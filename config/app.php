@@ -191,7 +191,6 @@ return [
     */
 
     'aliases' => [
-
         'User' => User::class,
         'App' => Illuminate\Support\Facades\App::class,
         'Arr' => Illuminate\Support\Arr::class,

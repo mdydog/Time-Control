@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-    <input type="hidden" value="{{Auth::id()}}" id="cuid"/>
     <div class="modal fade" id="addEditUser" tabindex="-1" role="dialog" aria-labelledby="addEditUserLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">

@@ -15,6 +15,7 @@
     <link href="{{ url('/') }}/css/fontawesome5.all.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="{{ url('/') }}/css/datatables.min.css"/>
 
+
 @if (!Request::is('profile'))
     <!--date picker-->
     <link rel="stylesheet" href="{{ url('/') }}/css/tempusdominus-bootstrap-4.min.css" />
@@ -35,7 +36,12 @@
 
 </head>
 <body>
+
     @if(Auth::user())
+        @php
+            echo '<div style="display:none" id="user-data">'.json_encode(Auth::user()).'</div>';
+            echo '<div style="display:none" id="user-groups">'.json_encode(Auth::user()->groups()).'</div>';
+        @endphp
         @include('layouts/nav')
     @endif
     @yield('content')

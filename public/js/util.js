@@ -2,6 +2,12 @@ var url = location.protocol+"//"+location.host+"/"
 var csrf = $('meta[name="csrf-token"]').attr('content');
 var rqcsrf = "_token="+csrf;
 var modal_result=false;
+var adm=false;
+if ($('#user-data').length>0){
+    var current_user = JSON.parse($('#user-data')[0].innerHTML);
+    current_user.groups = JSON.parse($('#user-groups')[0].innerHTML);
+    adm = $.inArray(2,current_user.groups)||$.inArray(3,current_user.groups);
+}
 
 function format2digits(num) {
     return ("0" + num).slice(-2);

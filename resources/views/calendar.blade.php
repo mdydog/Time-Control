@@ -1,9 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-    @if(Auth::user()->isInAnyGroup([2,3]))
-        <div style="display:none" id="admdiv"></div>
-    @endif
     <div class="modal fade" id="addEvent" tabindex="-1" role="dialog" aria-labelledby="addEventLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">

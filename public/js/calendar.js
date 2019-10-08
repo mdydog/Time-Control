@@ -10,7 +10,6 @@ var modal_error = $('#error_alert');
 
 var calendar=null;
 
-var adm = $('#admdiv').length>0;
 if (adm){
     var ufest = $('#ufest');
 }
