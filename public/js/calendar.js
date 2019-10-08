@@ -108,7 +108,7 @@ function addEvent(e){
     }
 
     modal_error.hide();
-    request('post',url+"/api/addevent",{fest: (adm?(ufest.prop("checked") === true?1:0):0),datefrom: date_from,dateto: date_to,comment: comment},function (result) {
+    request('post',url+"/api/addevent",{fest: (current_user.admin?(ufest.prop("checked") === true?1:0):0),datefrom: date_from,dateto: date_to,comment: comment},function (result) {
         if (result.status==="ok"){
             location.reload();
         }
