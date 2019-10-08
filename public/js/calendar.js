@@ -10,7 +10,7 @@ var modal_error = $('#error_alert');
 
 var calendar=null;
 
-if (adm){
+if (current_user.admin){
     var ufest = $('#ufest');
 }
 
@@ -46,7 +46,7 @@ function insertEvent(event){
     var date_ranges=" <span>"+dateFormat(new Date(event.from*1000))+(event.from!==event.to?"-"+dateFormat(new Date(event.to*1000)):"")+"</span>";
     var approved_label=(event.approved===1||event.approved===2?"<span class=\"status\">("+cs.replace(cs.charAt(0),cs.charAt(0).toUpperCase())+")</span>":"");
     var adm_btn="";
-    if (adm && event.approved===0){
+    if (current_user.admin && event.approved===0){
         adm_btn="<div class=\"text-right\"><button class=\"btn btn-primary btn-sm\" onclick=\"setEventStatus(event,1,"+event.id+")\">Accept</button> <button class=\"btn btn-danger btn-sm\" onclick=\"setEventStatus(event,2,"+event.id+")\">Reject</button></div>"
     }
     var html = "<li"+(cs!==""?" onclick=\"go("+(event.from*1000)+")\" class=\""+cs+"\"":"")+">"+event.comment+approved_label+adm_btn+date_ranges+"</li>";

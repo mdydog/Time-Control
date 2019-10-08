@@ -44,6 +44,8 @@ var current_time_data = null;
 
 var disabledDates = [];
 
+var admin_panel_mode = location.href.toLowerCase().indexOf("/admin") >= 0;
+
 function insideEvent(unix_seconds, uid) {
     for (var i = 0; i < events.length; i++) {
         var event = events[i];
@@ -61,7 +63,7 @@ function updatePanel() {
         return;
     busy = true; //only one at same time
 
-    if (adm) {
+    if (admin_panel_mode) {
         $('#loading_card').parent().parent().show(); //loading card
     } else {
         $('#loading_card').show(); //loading card
@@ -82,7 +84,7 @@ function updatePanel() {
     current_time_data = [];
 
     var aurl=url + "api/report";
-    if (adm){
+    if (admin_panel_mode){
         aurl+=(current_search === -2 ? "/all" : "/" + current_search);
     }
     aurl+="/" + parseInt(moment(datefrom.val() + "Z", "D/M/YYYYZ")._d.getTime() / 1000) + "/" + parseInt(moment(dateto.val() + "Z", "D/M/YYYYZ")._d.getTime() / 1000);
@@ -96,7 +98,7 @@ function updatePanel() {
         if (result.status === "ok") {
             current_time_data = result.data;
             result.data.forEach(function (row) {
-                if (!(adm && hide_current.is(":checked") && row.user === current_user.id)){ //hide current user
+                if (!(admin_panel_mode && hide_current.is(":checked") && row.user === current_user.id)){ //hide current user
                     var sdate = new Date(row.date * 1000);
                     disabledDates.push(sdate);
                     var diffSeconds = row.end_hour - row.start_hour;
@@ -119,7 +121,7 @@ function updatePanel() {
 
 
                     var buttons = "";
-                    if (adm) {
+                    if (admin_panel_mode) {
                         if (row.editable===0){
                             buttons = "<i class=\"fas fa-highlighter\" onclick=\"enableOneEdit(event,"+row.id+")\" style='cursor:pointer;' title='Enable one time edit mode'></i>";
                         }
@@ -171,7 +173,7 @@ function updatePanel() {
 
 
         users.forEach(function (user) {
-            if ((current_search === -2 || user.id === current_search) && !(adm && hide_current.is(":checked") && user.id === current_user.id)){
+            if ((current_search === -2 || user.id === current_search) && !(admin_panel_mode && hide_current.is(":checked") && user.id === current_user.id)){
                 var date = setTimeZero(new Date(moment(datefrom.val() + "Z", "D/M/YYYYZ")._d));
                 var todate = setTimeZero(new Date(moment(dateto.val() + "Z", "D/M/YYYYZ")._d));
                 do {
@@ -232,7 +234,7 @@ function updatePanel() {
                 {"orderable": false, "targets": [0, 10]}
             ]
         });
-        if (!adm) {
+        if (!admin_panel_mode) {
             var dp = $('#datetimepicker');
             dp.datetimepicker('destroy');
             dp.datetimepicker({
@@ -246,7 +248,7 @@ function updatePanel() {
 
         $('#report_card').show();
 
-        if (adm) {
+        if (admin_panel_mode) {
             $('#loading_card').parent().parent().hide();
         } else {
             $('#register_card').show();
@@ -415,8 +417,8 @@ function editCommentModal(e, id, full, f, t, b,date) {
 }
 
 function loadUsers(cb) {
-    request('get',url + "api/user" + (adm ? "s" : ""),undefined,function (result) {
-        if (adm) {
+    request('get',url + "api/user" + (admin_panel_mode ? "s" : ""),undefined,function (result) {
+        if (admin_panel_mode) {
             users = result.data;
         } else {
             users.push(result.data);
@@ -458,7 +460,7 @@ $(document).ready(function () {
         var to = dateFormat(moment(dateto.val() + "Z", "D/M/YYYYZ")._d, false);
         for (var i = 0; i < users.length; i++) {
             var user = users[i];
-            if ((current_search === -2 || user.id === current_search) && !(adm && hide_current.is(":checked") && user.id === current_user.id)) {
+            if ((current_search === -2 || user.id === current_search) && !(admin_panel_mode && hide_current.is(":checked") && user.id === current_user.id)) {
 
                 var registeredHours = 0;
                 var expectedHours = 0;
