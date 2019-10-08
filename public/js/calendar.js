@@ -85,7 +85,7 @@ function setEventStatus(e,status,id) {
 
 function addEvent(e){
     e.preventDefault();
-    var date_from = parseInt(moment(datefrom.val()+"Z","D/M/YYYYZ")._d.getTime()/1000);
+    var date_from = getUnixFromDatepicker(datefrom);
     if (date_from === null || date_from === undefined || isNaN(date_from)){
         modal_error.text("Wrong date from format");
         modal_error.show();
@@ -93,7 +93,7 @@ function addEvent(e){
     }
 
 
-    var date_to = parseInt(moment(dateto.val()+"Z","D/M/YYYYZ")._d.getTime()/1000);
+    var date_to = getUnixFromDatepicker(dateto);
     if (date_to === null || date_to === undefined || isNaN(date_to)){
         modal_error.text("Wrong date to format");
         modal_error.show();
@@ -165,8 +165,8 @@ $(document).ready(function(){
         minDate: dmin
     });
     datefrom.on("change.datetimepicker", function (e) {
-        if (moment(dateto.val() + "Z", "D/M/YYYYZ")._d.getTime()<moment(datefrom.val() + "Z", "D/M/YYYYZ")._d.getTime()){
-            dateto.val(dateFormat(moment(datefrom.val() + "Z", "D/M/YYYYZ")._d));
+        if (getUnixFromDatepicker(dateto)<getUnixFromDatepicker(datefrom)){
+            dateto.val(dateFormat(dateFromDatepicker(datefrom)));
         }
         dateto.datetimepicker('minDate', e.date);
     });

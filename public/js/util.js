@@ -132,3 +132,15 @@ function request(type, url,data, cb) {
         notify("Error connecting to the server!", "error");
     });
 }
+
+function dateFromDatepicker(datepicker){
+    return moment(datepicker.val() + "Z", "D/M/YYYYZ")._d
+}
+
+function getUnixFromDatepicker(datepicker) {
+    return parseInt(dateFromDatepicker(datepicker).getTime() / 1000);
+}
+
+function dateZeroFromDatepicker(datepicker){
+    return setTimeZero(new Date(dateFromDatepicker(datepicker)));
+}

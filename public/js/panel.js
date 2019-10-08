@@ -58,20 +58,7 @@ function insideEvent(unix_seconds, uid) {
     return false;
 }
 
-function updatePanel() {
-    if (busy)
-        return;
-    busy = true; //only one at same time
-
-    if (admin_panel_mode) {
-        $('#loading_card').parent().parent().show(); //loading card
-    } else {
-        $('#loading_card').show(); //loading card
-        $('#register_card').hide(); //loading card
-    }
-
-
-    //clear
+function clearCurrentData() {
     table.DataTable().clear();
     table.DataTable().destroy();
 
@@ -82,12 +69,21 @@ function updatePanel() {
     expected_hours = 0;
     unregistered_days = 0;
     current_time_data = [];
+}
+
+function updatePanel() {
+    if (busy)
+        return;
+    busy = true; //only one at same time
+
+    hideReportTable();
+    clearCurrentData();
 
     var aurl=url + "api/report";
     if (admin_panel_mode){
         aurl+=(current_search === -2 ? "/all" : "/" + current_search);
     }
-    aurl+="/" + parseInt(moment(datefrom.val() + "Z", "D/M/YYYYZ")._d.getTime() / 1000) + "/" + parseInt(moment(dateto.val() + "Z", "D/M/YYYYZ")._d.getTime() / 1000);
+    aurl+="/" + getUnixFromDatepicker(datefrom) + "/" + getUnixFromDatepicker(dateto);
 
     request('get',aurl,undefined,function(result){
         //calculamos el minimo dia de la semana para calcular el tiempo trabajado esta semana
@@ -171,37 +167,15 @@ function updatePanel() {
             });
         }
 
-
+        var date = dateZeroFromDatepicker(datefrom);
+        var todate = dateZeroFromDatepicker(dateto);
         users.forEach(function (user) {
             if ((current_search === -2 || user.id === current_search) && !(admin_panel_mode && hide_current.is(":checked") && user.id === current_user.id)){
-                var date = setTimeZero(new Date(moment(datefrom.val() + "Z", "D/M/YYYYZ")._d));
-                var todate = setTimeZero(new Date(moment(dateto.val() + "Z", "D/M/YYYYZ")._d));
-                do {
-                    if (date.getUTCDay() !== 0 && date.getUTCDay() !== 6 && !insideEvent(parseInt(date.getTime() / 1000), user.id)) {
-                        expected_hours += user.mins;
-
-                        var found = false;
-                        for (var k = 0; k < current_time_data.length; k++) {
-                            var row = current_time_data[k];
-                            var rowdate = setTimeZero(new Date(row.date * 1000));
-                            if (row.user === user.id && rowdate.getTime() === date.getTime()) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found) {
-                            unregistered_days++;
-                        }
-                    }
-                    date.setUTCDate(date.getUTCDate() + 1);
-                }
-                while (date.getTime() <= todate.getTime());
+                var expected = periodExpectedCalculation(date,todate,user);
+                expected_hours+=expected.expectedHours;
+                unregistered_days+=expected.unregisteredDays;
             }
         });
-
-        var date = setTimeZero(new Date(moment(datefrom.val() + "Z", "D/M/YYYYZ")._d));
-
-        var todate = setTimeZero(new Date(moment(dateto.val() + "Z", "D/M/YYYYZ")._d));
 
         table.attr('style', 'width:100%');
         todayP.text(secondsAmount(todaySeconds));
@@ -235,29 +209,74 @@ function updatePanel() {
             ]
         });
         if (!admin_panel_mode) {
-            var dp = $('#datetimepicker');
-            dp.datetimepicker('destroy');
-            dp.datetimepicker({
-                format: 'L',
-                locale: 'es',
-                daysOfWeekDisabled: [0, 6],
-                disabledDates: disabledDates
-            });
-            dp.datetimepicker('maxDate', moment());
+            reloadRegisterDatePicker();
         }
 
-        $('#report_card').show();
-
-        if (admin_panel_mode) {
-            $('#loading_card').parent().parent().hide();
-        } else {
-            $('#register_card').show();
-            $('#loading_card').hide();
-        }
+        showReportTable();
 
         table.DataTable().columns.adjust().draw();
         busy = false;
     });
+}
+
+function periodExpectedCalculation(rdate,rtodate,user){
+    var date = new Date(rdate);
+    var todate = new Date(rtodate);
+    var expected_hours=0;
+    var unregistered_days=0;
+    do {
+        if (date.getUTCDay() !== 0 && date.getUTCDay() !== 6 && !insideEvent(parseInt(date.getTime() / 1000), user.id)) {
+            expected_hours += user.mins;
+
+            var found = false;
+            for (var k = 0; k < current_time_data.length; k++) {
+                var row = current_time_data[k];
+                var rowdate = setTimeZero(new Date(row.date * 1000));
+                if (row.user === user.id && rowdate.getTime() === date.getTime()) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                unregistered_days++;
+            }
+        }
+        date.setUTCDate(date.getUTCDate() + 1);
+    }
+    while (date.getTime() <= todate.getTime());
+    return {'expectedHours':expected_hours,'unregisteredDays':unregistered_days}
+}
+
+function showReportTable() {
+    $('#report_card').show();
+    if (admin_panel_mode) {
+        $('#loading_card').parent().parent().hide();
+    } else {
+        $('#register_card').show();
+        $('#loading_card').hide();
+    }
+}
+
+function hideReportTable(){
+    $('#report_card').hide();
+    if (admin_panel_mode) {
+        $('#loading_card').parent().parent().show(); //loading card
+    } else {
+        $('#loading_card').show(); //loading card
+        $('#register_card').hide(); //loading card
+    }
+}
+
+function reloadRegisterDatePicker(){
+    var dp = $('#datetimepicker');
+    dp.datetimepicker('destroy');
+    dp.datetimepicker({
+        format: 'L',
+        locale: 'es',
+        daysOfWeekDisabled: [0, 6],
+        disabledDates: disabledDates
+    });
+    dp.datetimepicker('maxDate', moment());
 }
 
 function loadEvents(cb) {
@@ -283,12 +302,11 @@ function registerDay(e, full) {
     var to_hour = null;
     var breaktime = null;
     if (full) {
-        date = moment(register_date.val() + "Z", "D/M/YYYYZ")._d;
+        date = getUnixFromDatepicker(register_date);
         if (date === null || date === undefined || isNaN(date)) {
             showRegisterError("Wrong date format");
             return;
         }
-        date = Math.floor(date.getTime() / 1000);
         from_hour = register_from_hour.val();
         if (from_hour === null || from_hour === undefined || from_hour.indexOf(':') < 0) {
             showRegisterError("Wrong 'From Hour' Format");
@@ -456,8 +474,8 @@ $(document).ready(function () {
         var book = XLSX.utils.book_new();
         book.SheetNames.push("Sheet");
         var sheet_data = [["Name","From","To","Registered Hours","Expected Hours","Registered Days","Unregistered Days","Warning Days"]];
-        var from = dateFormat(moment(datefrom.val() + "Z", "D/M/YYYYZ")._d, false);
-        var to = dateFormat(moment(dateto.val() + "Z", "D/M/YYYYZ")._d, false);
+        var from = dateFormat(dateFromDatepicker(datefrom), false);
+        var to = dateFormat(dateFromDatepicker(dateto), false);
         for (var i = 0; i < users.length; i++) {
             var user = users[i];
             if ((current_search === -2 || user.id === current_search) && !(admin_panel_mode && hide_current.is(":checked") && user.id === current_user.id)) {
@@ -480,32 +498,11 @@ $(document).ready(function () {
                 }
                 registeredHours = secondsAmount(registeredHours);
 
-                var date = setTimeZero(new Date(moment(datefrom.val() + "Z", "D/M/YYYYZ")._d));
-                var todate = setTimeZero(new Date(moment(dateto.val() + "Z", "D/M/YYYYZ")._d));
-                do {
-                    if (date.getUTCDay() !== 0 && date.getUTCDay() !== 6 && !insideEvent(parseInt(date.getTime() / 1000), user.id)) {
-                        expectedHours += user.mins;
-
-                        var found = false;
-                        for (var ux = 0; ux < current_time_data.length; ux++) {
-                            var rowd = current_time_data[ux];
-                            var rowdate = setTimeZero(new Date(rowd.date * 1000));
-                            if (rowd.user === user.id && rowdate.getTime() === date.getTime()) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found) {
-                            unregisteredDays++;
-                        }
-                    }
-                    date.setUTCDate(date.getUTCDate() + 1);
-                }
-                while (date.getTime() <= todate.getTime());
-
-
-
-                expectedHours = secondsAmount(expectedHours*60);
+                var date = dateZeroFromDatepicker(datefrom);
+                var todate = dateZeroFromDatepicker(dateto);
+                var expected = periodExpectedCalculation(date,todate,user);
+                unregisteredDays+=expected.unregisteredDays;
+                expectedHours = secondsAmount(expected.expectedHours*60);
 
                 var sheet_row = [];
                 sheet_row.push(user.name);
@@ -601,8 +598,8 @@ $(document).ready(function () {
         minDate: new Date().setUTCDate(0)
     });
     datefrom.on("change.datetimepicker", function (e) {
-        if (moment(dateto.val() + "Z", "D/M/YYYYZ")._d.getTime()<moment(datefrom.val() + "Z", "D/M/YYYYZ")._d.getTime()){
-            dateto.val(dateFormat(moment(datefrom.val() + "Z", "D/M/YYYYZ")._d));
+        if (getUnixFromDatepicker(dateto)<getUnixFromDatepicker(datefrom)){
+            dateto.val(dateFormat(dateFromDatepicker(datefrom)));
         }
         dateto.datetimepicker('minDate', e.date);
         updatePanel();
