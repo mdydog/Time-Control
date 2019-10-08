@@ -131,11 +131,11 @@
 
                     <div class="row">
                         <div class="col-md-12 disable-select">
-                            <span style="font-size: 2em">History</span>
+                            <span class="fa-2x">History</span>
                             @if(Auth::user()->isInAnyGroup([2,3]) && Request::is('admin'))
                                 <button class="btn btn-primary btn-sm float-right ml-2" id="btn_export">Export Excel</button>
                                 <button class="btn btn-primary btn-sm float-right ml-2" id="btn_export_totals">Export Totals</button>
-                                <i class="fas fa-filter" style="border: 1px solid lightgray;padding:4px;border-radius: 4px;cursor:pointer" onclick="event.preventDefault();$('#filters').toggle()"></i>
+                                <i class="fas fa-filter" title="Hide/Show Filters" style="border: 1px solid lightgray;padding:4px;border-radius: 4px;cursor:pointer" onclick="event.preventDefault();$('#filters').toggle()"></i>
                             @endif
                             <div id="filters">
                                 @if(Auth::user()->isInAnyGroup([2,3]) && Request::is('admin'))
@@ -161,7 +161,7 @@
                                 @endif
                                 <span>Range from: <input id="datepickerfrom" autocomplete="off" type="text" class="form-control datetimepicker-input" style="display:inline;width:auto;"  data-toggle="datetimepicker" data-target="#datepickerfrom"/> To: <input id="datepickerto" autocomplete="off" type="text" class="form-control datetimepicker-input" style="display:inline;width:auto;"  data-toggle="datetimepicker" data-target="#datepickerto"/></span>
                                 @if(Auth::user()->isInAnyGroup([2,3]) && Request::is('admin'))
-                                    <br><br><input type="checkbox" id="hide_current"/><label for="hide_current">Hide my user from history</label>
+                                    <br><br><input type="checkbox" id="hide_current"/> <label for="hide_current">Hide my user from history</label>
                                 @endif
                             </div>
                         </div>

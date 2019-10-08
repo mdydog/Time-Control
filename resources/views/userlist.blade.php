@@ -62,12 +62,12 @@
     </div>
     <div class="row no-gutters">
         <div class="col-md-12">
-            <div id="loading_card" class="card" style="margin:20px;padding: 20px;">
+            <div id="loading_card" class="card m-4 p-4">
                 <div class="text-center">
                     <h3>Loading...</h3>
                 </div>
             </div>
-            <div id="user_card" class="card" style="margin:20px;padding: 20px;display: none">
+            <div id="user_card" class="card m-4 p-4" style="display: none">
                 <h2>Users</h2>
                 <div class="row">
                     <div class="col-md-12">

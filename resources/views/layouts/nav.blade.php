@@ -29,7 +29,7 @@
                 <a class="nav-link" href="{{url("/")}}/calendar">Calendar</a>
             </li>
         </ul>
-        <i class="fas fa-sign-out-alt fa-2x" style="cursor: pointer;color:white;" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" title="Logout"></i>
+        <i class="fas fa-sign-out-alt fa-2x click text-white" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" title="Logout"></i>
         <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
     </div>
 </nav>

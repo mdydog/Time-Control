@@ -109,3 +109,13 @@ pre {
     -o-user-select: none;
     user-select: none;
 }
+
+.fa-ok{
+    color:greenyellow;text-shadow: 0 0 3px #000;
+}
+.fa-warning{
+    color:yellow;text-shadow: 0 0 3px #000;
+}
+.click{
+    cursor:pointer;
+}

@@ -123,13 +123,13 @@ function updatePanel() {
                     var buttons = "";
                     if (admin_panel_mode) {
                         if (row.editable===0){
-                            buttons = "<i class=\"fas fa-highlighter\" onclick=\"enableOneEdit(event,"+row.id+")\" style='cursor:pointer;' title='Enable one time edit mode'></i>";
+                            buttons = "<i class=\"fas fa-highlighter click\" onclick=\"enableOneEdit(event,"+row.id+")\" title='Enable one time edit mode'></i>";
                         }
                     } else {
                         if (dateFormat(new Date(), false) === regisDate || row.editable) {
-                            buttons = "<i class=\"fas fa-edit\" style='cursor:pointer;color:greenyellow;text-shadow: 0 0 3px #000;' title='Edit' onclick='editCommentModal(event," + row.id + ",true," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
+                            buttons = "<i class=\"fas fa-edit click fa-ok\" title='Edit' onclick='editCommentModal(event," + row.id + ",true," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
                         } else {
-                            buttons = "<i class=\"fas fa-edit\" style='cursor:pointer;' title='Edit comment' onclick='editCommentModal(event," + row.id + ",false," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
+                            buttons = "<i class=\"fas fa-edit click\" title='Edit comment' onclick='editCommentModal(event," + row.id + ",false," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
                         }
                     }
 
@@ -143,13 +143,13 @@ function updatePanel() {
 
                     var status_icon = "";
                     if (final_seconds > maxfseconds) {
-                        status_icon = "<i class=\"fas fa-exclamation-triangle\" style='color:yellow;text-shadow: 0 0 3px #000;' title='Too much time in your working day!'></i>";
+                        status_icon = "<i class=\"fas fa-exclamation-triangle fa-warning\" title='Too much time in your working day!'></i>";
                         warning_days++;
                     } else if (date !== regisDate) {
-                        status_icon = "<i class=\"fas fa-exclamation-triangle\" style=\"color:yellow;text-shadow: 0 0 3px #000;\" title=\"Your registration date was after your working date! Don't do that!!\"></i>";
+                        status_icon = "<i class=\"fas fa-exclamation-triangle fa-warning\" title=\"Your registration date was after your working date! Don't do that!!\"></i>";
                         warning_days++;
                     } else {
-                        status_icon = "<i class=\"fas fa-check-circle\" style='color:greenyellow;text-shadow: 0 0 3px #000;' title='Everything ok'></i>";
+                        status_icon = "<i class=\"fas fa-check-circle fa-ok\" title='Everything ok'></i>";
                     }
 
 
