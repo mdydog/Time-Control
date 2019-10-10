@@ -69,6 +69,7 @@ class FakeData extends Command
                 'password' => Hash::make("12345678"),
                 'supervisor' => null,
                 'mins' => $mins[$sm],
+                'summermins' => $mins[$sm]-60,
                 'active' => 1
             ]);
             Role::create([
@@ -91,6 +92,7 @@ class FakeData extends Command
                     'password' => Hash::make("12345678"),
                     'supervisor' => $u1->id,
                     'mins' => $mins[$sm],
+                    'summermins' => $mins[$sm]-60,
                     'active' => 1
                 ]);
                 Role::create([

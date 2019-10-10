@@ -26,6 +26,10 @@
                         <input type="hour" class="form-control" id="whours" placeholder="Example: 08:00" required/>
                     </div>
                     <div class="form-group">
+                        <label for="swhours">Summer W. hours*:</label>
+                        <input type="hour" class="form-control" id="swhours" placeholder="Example: 08:00" required/>
+                    </div>
+                    <div class="form-group">
                         <label for="usupervisor">Supervisor:</label>
                         <select id="usupervisor" class="custom-select">
                             <option value="-1" selected>None</option>
@@ -81,6 +85,7 @@
                             <td>Name</td>
                             <td>Email</td>
                             <td>Working Hours</td>
+                            <td>Summer W. Hours</td>
                             <td>Supervisor</td>
                             <td>Login Enabled</td>
                             <td>Roles</td>

@@ -20,6 +20,7 @@ class CreateUsersTable extends Migration
             $table->string('password');
             $table->unsignedBigInteger('supervisor')->nullable();
             $table->integer('mins')->default(8*60);
+            $table->integer('summermins')->default(8*60);
             $table->boolean('active')->default(true);
             $table->rememberToken();
             $table->timestamps();

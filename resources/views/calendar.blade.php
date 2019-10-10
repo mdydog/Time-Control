@@ -56,6 +56,38 @@
                             <div id="calendar"></div>
                         </div>
                     </div>
+                    @if(Auth::user()->isInGroup(2))
+                        <div class="row">
+                            <div class="col-md-12 mt-4">
+                                <div class="alert alert-warning" id="summerdiv">
+                                    <h3>Admin Menu</h3>
+                                    <h4>Summer ranges:</h4>
+
+                                    @php
+                                    $summer_dates=App\SummerDate::all();
+                                    $year = 2019;
+                                    $nextY = intval(date("Y", (new DateTime())->getTimestamp()))+1;
+                                    while ($year <= $nextY){
+                                        $data=null;
+                                        foreach($summer_dates as $summer){
+                                            if ($summer["year"]===$year){
+                                                $data=$summer;
+                                            }
+                                        }
+                                        echo "<h5>".$year.":</h5>";
+                                        echo "<form data-year=\"".$year."\" class=\"form-inline\">";
+                                        echo "<p>From: <input type=\"text\" class=\"form-control\" placeholder=\"DD/MM/YYYY\"".($data!==null?"value=\"".date("d/m/Y", $data["date_from"])."\"":"")."/></p>";
+                                        echo "<p class=\"ml-2\">To: <input type=\"text\" class=\"form-control\" placeholder=\"DD/MM/YYYY\"".($data!==null?"value=\"".date("d/m/Y", $data["date_to"]):"")."\""."/></p>";
+                                        echo "</form>";
+                                        $year++;
+                                    }
+
+                                    @endphp
+                                    <button class="btn btn-primary btn-sm" onclick="saveSummerDates(event)">Submit</button>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

@@ -101,7 +101,7 @@
             <div class="col-md-12">
                 <div id="loading_card" class="card p-4">
                     <div class="text-center">
-                        <h3>Loading...</h3>
+                        <h3>Loading... <i class="fas fa-circle-notch fa-spin"></i></h3>
                     </div>
                 </div>
                 @if(!Request::is('admin'))

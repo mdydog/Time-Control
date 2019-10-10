@@ -7,6 +7,7 @@ var add_user_error_alert = $('#add_user_error_alert');
 var modal_user_id = $('#uid');
 var modal_user_name = $('#uname');
 var modal_user_whours = $('#whours');
+var modal_user_swhours = $('#swhours');
 var modal_user_email = $('#uemail');
 var modal_user_supervisor = $('#usupervisor');
 var modal_user_active = $('#uactive');
@@ -34,7 +35,7 @@ function updatePanel(){
                     groups_data+="<span rolid='"+row.groups[i]+"'>"+name+"</span>"+(i+1<row.groups.length?", ":"");
                 }
 
-                table.append("<tr><td>"+row.name+"</td><td>"+row.email+"</td><td>"+parseHour(row.mins)+"</td><td>"+(row.supervisor===null?"None":($('option[value=\"'+row.supervisor+'\"]').text()===""?"None":$('option[value=\"'+row.supervisor+'\"]').text()))+"</td><td><i class=\"fas "+(row.active===1?"fa-check\" style='font-size: 1.5em;color:mediumseagreen;'":"fa-times\" style='font-size: 1.5em;color:red;'")+"></i></td><td>"+groups_data+"</td><td>"+(parseInt(current_user.id)!==parseInt(row.id)?"<i class=\"fas fa-user-edit\" style=\"font-size:1.5em;cursor:pointer;\" onclick=\"userModal(event,"+row.id+",'"+row.name+"','"+row.email+"',"+row.supervisor+","+row.active+",'"+row.groups+"','"+parseHour(row.mins)+"')\"></i>":"")+"</td></tr>");
+                table.append("<tr><td>"+row.name+"</td><td>"+row.email+"</td><td>"+parseHour(row.mins)+"</td><td>"+parseHour(row.summermins)+"</td><td>"+(row.supervisor===null?"None":($('option[value=\"'+row.supervisor+'\"]').text()===""?"None":$('option[value=\"'+row.supervisor+'\"]').text()))+"</td><td><i class=\"fas "+(row.active===1?"fa-check\" style='font-size: 1.5em;color:mediumseagreen;'":"fa-times\" style='font-size: 1.5em;color:red;'")+"></i></td><td>"+groups_data+"</td><td>"+(parseInt(current_user.id)!==parseInt(row.id)?"<i class=\"fas fa-user-edit\" style=\"font-size:1.5em;cursor:pointer;\" onclick=\"userModal(event,"+row.id+",'"+row.name+"','"+row.email+"',"+row.supervisor+","+row.active+",'"+row.groups+"','"+parseHour(row.mins)+"','"+parseHour(row.summermins)+"')\"></i>":"")+"</td></tr>");
             });
         }
 
@@ -88,6 +89,14 @@ function addUser(e){
     }
     mins = parseInt(mins.split(":")[0])*60+parseInt(mins.split(":")[1]);
 
+    var summermins = modal_user_swhours.val();
+    if (summermins === null || summermins === undefined || summermins === ""){
+        add_user_error_alert.text("Wrong summer working hours");
+        add_user_error_alert.show();
+        return;
+    }
+    summermins = parseInt(summermins.split(":")[0])*60+parseInt(summermins.split(":")[1]);
+
     var supervisor = parseInt(modal_user_supervisor.val());
     if (supervisor === null || supervisor === undefined){
         add_user_error_alert.text("Error with supervisor");
@@ -117,7 +126,7 @@ function addUser(e){
     }
     add_user_error_alert.hide();
 
-    request('post',url+"api/addedituser",{id: id,name: name,mins:mins,email: email, supervisor: supervisor, active: active, adminrole: adminrole, supervisorrole: supervisorrole},function (result) {
+    request('post',url+"api/addedituser",{id: id,name: name,mins:mins,summermins:summermins,email: email, supervisor: supervisor, active: active, adminrole: adminrole, supervisorrole: supervisorrole},function (result) {
         if (result.status==="ok"){
             add_user_modal.modal('hide');
             updatePanel();
@@ -135,7 +144,7 @@ function addUser(e){
     });
 }
 
-function userModal(e,id,name,email,supervisor,active,groups,hours){
+function userModal(e,id,name,email,supervisor,active,groups,hours,shours){
     e.preventDefault();
     add_user_error_alert.hide();
 
@@ -144,6 +153,7 @@ function userModal(e,id,name,email,supervisor,active,groups,hours){
         modal_user_name.val("");
         modal_user_email.val("");
         modal_user_whours.val("");
+        modal_user_swhours.val("");
         modal_user_supervisor.val(-1);
         modal_user_active.attr('checked',true);
         modal_user_adminrole.removeAttr('checked');
@@ -154,6 +164,7 @@ function userModal(e,id,name,email,supervisor,active,groups,hours){
         modal_user_name.val(name);
         modal_user_email.val(email);
         modal_user_whours.val(hours);
+        modal_user_swhours.val(shours);
         modal_user_supervisor.val(supervisor===null?-1:supervisor);
         modal_user_active.attr('checked',parseInt(active)===1)
         modal_user_adminrole.removeAttr('checked');

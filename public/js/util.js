@@ -152,3 +152,20 @@ function sameDate(date1,date2){
 function fixXSS(text){
     return text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+
+function saveBase64File(name,type,base64){
+    if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+        var blob = b64toBlob(base64,type);
+        window.navigator.msSaveOrOpenBlob(blob, name);
+    } else {
+        var a = document.createElement("a");
+        a.style = "display: none";
+        a.href = "data:"+type+";base64,"+base64;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () {
+            document.body.removeChild(a);
+        }, 2000);
+    }
+}

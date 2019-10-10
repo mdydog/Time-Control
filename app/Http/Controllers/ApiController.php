@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Event;
 use App\Group;
 use App\Role;
+use App\SummerDate;
 use App\Time;
 use DateTime;
 use App\User;
@@ -97,6 +98,77 @@ class ApiController extends Controller
         return $this->response(200,array('status'=>'ok','data'=>$rows));
     }
 
+    public function AddEditSummer(Request $request){
+        if (!Auth::user()->isInGroup(2)){
+            abort(404);
+            return;
+        }
+        $data = $request["data"];
+        if (!is_array($data)){
+            return $this->response(200,array('status'=>'error','msg'=>"Wrong format"));
+        }
+
+        DB::beginTransaction();
+        foreach ($data as $syear) {
+            $year=intval($syear["year"]);
+            $from=intval($syear["from"]);
+            $to=intval($syear["to"]);
+            if (!is_int($from)||$from<1546300800||
+                !is_int($to)||$to<1546300800||
+                !is_int($year)||$year<2019){ // minyear 2019
+                DB::rollBack();
+                return $this->response(200,array('status'=>'error','msg'=>"Wrong format"));
+            }
+            $year=$syear["year"];
+            $from=$syear["from"];
+            $to=$syear["to"];
+            if (intval(date("Y",$from)) != $year || intval(date("Y",$to)) != $year){
+                DB::rollBack();
+                return $this->response(200,array('status'=>'error','msg'=>"Range of ".$year." outside year"));
+            }
+
+            if ($from>=$to){
+                DB::rollBack();
+                return $this->response(200,array('status'=>'error','msg'=>"Wrong Dates"));
+            }
+
+            $indb = SummerDate::where("year","=",$year)->get()->first();
+            if ($indb===null){
+                try{
+                    SummerDate::create([
+                        'year' => $year,
+                        'date_from' => $from,
+                        'date_to' => $to,
+                    ]);
+                }
+                catch (\Exception $e){
+                    DB::rollBack();
+                    return $this->response(200,array('status'=>'error','msg'=>"Error creating ".$year.", process cancelled"));
+                }
+            }
+            else{
+                try{
+                    $indb->date_from=$from;
+                    $indb->date_to=$to;
+                    if (!$indb->save()){
+                        DB::rollBack();
+                        return $this->response(200,array('status'=>'error','msg'=>"Error saving ".$year.", process cancelled"));
+                    }
+                }
+                catch (\Exception $e){
+                    DB::rollBack();
+                    return $this->response(200,array('status'=>'error','msg'=>"Error saving ".$year.", process cancelled"));
+                }
+            }
+        }
+        DB::commit();
+        return $this->response(200,array('status'=>'ok'));
+    }
+
+    public function SummerRange(Request $request){
+        return $this->response(200,array('status'=>'ok','data'=>SummerDate::all()));
+    }
+
     public function AddEditUser(Request $request)
     {
         if (!Auth::user()->isInGroup(2)){
@@ -108,6 +180,7 @@ class ApiController extends Controller
             'id' => 'required|integer',
             'name' => 'required|string|max:50|min:1',
             'mins' => 'required|integer',
+            'summermins' => 'required|integer',
             'email' => 'required|email|max:100|min:1',
             'supervisor' => 'required|integer',
             'active' => 'required|boolean',
@@ -130,6 +203,7 @@ class ApiController extends Controller
         if ($user!=null){ //edit
             $user->name = $request["name"];
             $user->mins = $request["mins"];
+            $user->summermins = $request["summermins"];
             $user->email = $request["email"];
             $user->supervisor = intval($request["supervisor"])===-1?null:$request["supervisor"];
             $user->active = $request["active"];
@@ -145,6 +219,7 @@ class ApiController extends Controller
                 $user = User::create([
                     'name' => $request["name"],
                     'mins' => $request["mins"],
+                    'summermins' => $request["summermins"],
                     'email' => $request["email"],
                     'supervisor' => intval($request["supervisor"])===-1?null:$request["supervisor"],
                     'active' => $request["active"],
@@ -441,6 +516,7 @@ class ApiController extends Controller
                     'users.id',
                     'name',
                     'mins',
+                    'summermins',
                     'email',
                     'active',
                     'group',
@@ -456,6 +532,7 @@ class ApiController extends Controller
                     'users.id',
                     'name',
                     'mins',
+                    'summermins',
                     'email',
                     'active',
                     'group',

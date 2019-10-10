@@ -3,6 +3,8 @@ var addEvent_modal = $('#addEvent');
 var event_list = $('#event_list');
 var calendarEl = $('#calendar');
 
+var summerdiv = $('#summerdiv');
+
 var datefrom = $('#datefrom');
 var dateto = $('#dateto');
 var modal_title = $('#title');
@@ -12,6 +14,40 @@ var calendar=null;
 
 if (current_user.admin){
     var ufest = $('#ufest');
+}
+
+function saveSummerDates(e){
+    e.preventDefault();
+    var forms = summerdiv.find("form");
+
+    var data={data:[]};
+    for(var i = 0;i<forms.length;i++){
+        var form = $(forms[i]);
+        var year = form.attr('data-year');
+        var inputs = form.find("input");
+        if ($(inputs[0]).val().trim()!=="" && $(inputs[1]).val().trim()!==""){
+            var fromval=getUnixFromDatepicker($(inputs[0]));
+            var toval=getUnixFromDatepicker($(inputs[1]));
+            var fdata={
+                'year':year,
+                'from':fromval,
+                'to':toval,
+            };
+            data.data.push(fdata);
+        }
+    }
+
+    if (data.data.length>0){
+        request('post',url+"api/savesummer",data,function (result) {
+            if (result.status==="ok"){
+                location.reload();
+            }
+            else{
+                notify(result.msg,"error");
+            }
+        });
+
+    }
 }
 
 function updateCalendar(){

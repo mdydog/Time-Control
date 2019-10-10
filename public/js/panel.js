@@ -1,5 +1,7 @@
 var table = $('#report');
+var admin_panel_mode = location.href.toLowerCase().indexOf("/admin") >= 0;
 
+//top boxes elements
 var thisMonthP = $('#monthp');
 var todayP = $('#dayp');
 var thisWeekP = $('#weekp');
@@ -7,6 +9,16 @@ var thisRangeExpectedP = $('#emonthp');
 var unregisteredDaysP = $('#udaysp');
 var warningDaysP = $('#wdaysp');
 
+//filter elements
+var current_search = -2; //current selected user id in filter (-2 === All)
+var usr_list_select = $('#usr_list');
+var btn_export = $('#btn_export');
+var btn_export_totals = $('#btn_export_totals');
+var datefrom = $('#datepickerfrom');
+var dateto = $('#datepickerto');
+var hide_current = $('#hide_current'); //hide current user checkbox
+
+//modal elements
 var btn_register = $('#btn_register');
 var register_modal = $('#registerNewDay');
 var register_date = $('#rday');
@@ -16,35 +28,37 @@ var register_break = $('#lhour');
 var register_comment = $('#comment');
 var register_error_alert = $('#register_error_alert');
 
-var current_edit_id = 0;
+var current_edit_id = 0; //current editing row in the modal
 
+//Top data
 var todaySeconds = 0;
 var thisWeekSeconds = 0;
-var thisMonthSeconds = 0;
+var thisRangeSeconds = 0;
+var unregistered_days = 0;
+var warning_days = 0;
+var expected_hours = 0;
 
-var current_search = -2;
-var usr_list_select = $('#usr_list');
-var btn_export = $('#btn_export');
-var btn_export_totals = $('#btn_export_totals');
-
+//data from server
 var events = null;
 var users = [];
-
-var datefrom = $('#datepickerfrom');
-var dateto = $('#datepickerto');
-
-var hide_current = $('#hide_current');
-
-var busy = false;
-
-var warning_days = 0;
-var unregistered_days = 0;
-var expected_hours = 0;
 var current_time_data = null;
-
 var disabledDates = [];
+var summers = null;
 
-var admin_panel_mode = location.href.toLowerCase().indexOf("/admin") >= 0;
+var busy = false; //updatePanel busy
+
+function insideSummer(unix_seconds) {
+    var date = setTimeZero(new Date(unix_seconds*1000));
+    var parsedUnix = parseInt(date.getTime()/1000)
+    var year =date.getUTCFullYear();
+    for(var i = 0;i<summers.length;i++){
+        var summer = summers[i];
+        if (summer.year===year && parsedUnix>=summer.date_from && parsedUnix<=summer.date_to){
+            return true;
+        }
+    }
+    return false;
+}
 
 function insideEvent(unix_seconds, uid) {
     for (var i = 0; i < events.length; i++) {
@@ -64,7 +78,7 @@ function clearCurrentData() {
 
     todaySeconds = 0;
     thisWeekSeconds = 0;
-    thisMonthSeconds = 0;
+    thisRangeSeconds = 0;
     warning_days = 0;
     expected_hours = 0;
     unregistered_days = 0;
@@ -112,7 +126,7 @@ function updatePanel() {
 
         table.attr('style', 'width:100%');
         todayP.text(secondsAmount(todaySeconds));
-        thisMonthP.text(secondsAmount(thisMonthSeconds));
+        thisMonthP.text(secondsAmount(thisRangeSeconds));
         thisWeekP.text(secondsAmount(thisWeekSeconds));
         unregisteredDaysP.text(unregistered_days);
         thisRangeExpectedP.text(secondsAmount(expected_hours * 60));
@@ -161,10 +175,12 @@ function insertHistoryRow(row,minimun_date_week){
         todaySeconds += totalseconds;
     }
 
-    thisMonthSeconds += totalseconds;
+    thisRangeSeconds += totalseconds;
     if (sdate >= minimun_date_week) {
         thisWeekSeconds += totalseconds;
     }
+
+    var summer = insideSummer(row.date);
 
     var date = dateFormat(sdate, false);
     var start = secondsAmount(row.start_hour, false, true);
@@ -190,7 +206,13 @@ function insertHistoryRow(row,minimun_date_week){
     var maxfseconds = 0;
     for (var u = 0; u < users.length; u++) {
         if (users[u].id === row.user) {
-            maxfseconds = users[u].mins * 60;
+            if (summer) {
+                maxfseconds = users[u].summermins * 60;
+            }
+            else{
+                maxfseconds = users[u].mins * 60;
+            }
+
             break;
         }
     }
@@ -223,13 +245,19 @@ function insertHistoryRow(row,minimun_date_week){
 }
 
 function periodExpectedCalculation(rdate,rtodate,user){
-    var date = new Date(rdate);
-    var todate = new Date(rtodate);
+    var date = setTimeZero(new Date(rdate));
+    var todate = setTimeZero(new Date(rtodate));
     var expected_hours=0;
     var unregistered_days=0;
     do {
         if (date.getUTCDay() !== 0 && date.getUTCDay() !== 6 && !insideEvent(parseInt(date.getTime() / 1000), user.id)) {
-            expected_hours += user.mins;
+            if (insideSummer(parseInt(date.getTime() / 1000))){
+                expected_hours += user.summermins;
+            }
+            else{
+                expected_hours += user.mins;
+            }
+
 
             var found = false;
             for (var k = 0; k < current_time_data.length; k++) {
@@ -282,13 +310,6 @@ function reloadRegisterDatePicker(){
     dp.datetimepicker('maxDate', moment());
 }
 
-function loadEvents(cb) {
-    request('get',url + "api/events",undefined,function (result) {
-        events = result.data;
-        cb(updatePanel);
-    });
-}
-
 function showRegisterError(msg) {
     if (msg === null) {
         register_error_alert.hide();
@@ -321,6 +342,10 @@ function registerDay(e, full) {
                 return;
             }
             from_hour = fdata[0] * 60 * 60 + fdata[1] * 60;
+            if (isNaN(from_hour)){
+                showRegisterError("Wrong 'From Hour' Format");
+                return;
+            }
         }
         to_hour = register_to_hour.val();
         if (to_hour === null || to_hour === undefined || to_hour.indexOf(':') < 0) {
@@ -333,6 +358,10 @@ function registerDay(e, full) {
                 return;
             }
             to_hour = tdata[0] * 60 * 60 + tdata[1] * 60;
+            if (isNaN(to_hour)){
+                showRegisterError("Wrong 'To Hour' Format");
+                return;
+            }
         }
         breaktime = register_break.val();
         if (breaktime === null || breaktime === undefined || breaktime === "") {
@@ -437,6 +466,26 @@ function editCommentModal(e, id, full, f, t, b,date) {
     register_modal.modal();
 }
 
+function loadEvents(cb) {
+    request('get',url + "api/events",undefined,function (result) {
+        events = result.data;
+        cb();
+    });
+}
+
+function loadSummer(cb) {
+    request('get',url + "api/summer",undefined,function (result) {
+        summers = result.data;
+        cb();
+    });
+}
+
+function loadFinishedCheck() {
+    if (events!=null && users!=null && summers!=null){
+        updatePanel();
+    }
+}
+
 function loadUsers(cb) {
     request('get',url + "api/user" + (admin_panel_mode ? "s" : ""),undefined,function (result) {
         if (admin_panel_mode) {
@@ -492,7 +541,14 @@ $(document).ready(function () {
                 for (var k = 0; k < current_time_data.length; k++) {
                     var row = current_time_data[k];
                     if (row.user === user.id) {
-                        if (row.end_hour - row.start_hour - row.breaktime > user.mins * 60 ||
+                        var wmin=0;
+                        if(insideSummer(row.date)){
+                            wmin=user.summermins;
+                        }
+                        else{
+                            wmin=user.mins;
+                        }
+                        if (row.end_hour - row.start_hour - row.breaktime > wmin * 60 ||
                             setTimeZero(new Date(row.date * 1000)).getTime() !== setTimeZero(new Date(row.register_date * 1000)).getTime()) {
                             warningDays++;
                         }
@@ -509,14 +565,7 @@ $(document).ready(function () {
                 expectedHours = secondsAmount(expected.expectedHours*60);
 
                 var sheet_row = [];
-                sheet_row.push(user.name);
-                sheet_row.push(from);
-                sheet_row.push(to);
-                sheet_row.push(registeredHours);
-                sheet_row.push(expectedHours);
-                sheet_row.push(registeredDays);
-                sheet_row.push(unregisteredDays);
-                sheet_row.push(warningDays);
+                sheet_row.push(user.name,from,to,registeredHours,expectedHours,registeredDays,unregisteredDays,warningDays);
                 sheet_data.push(sheet_row);
             }
         }
@@ -524,20 +573,7 @@ $(document).ready(function () {
         var blob_data = XLSX.write(book, {bookType:'xlsx', bookSST:true, type: 'base64'})
         var dt = new Date();
         var fname = "Export_Totals_" + dt.getFullYear() + "_" + (dt.getUTCMonth() + 1) + "_" + dt.getUTCDate() + ".xlsx";
-        if (window.navigator && window.navigator.msSaveOrOpenBlob) {
-            var blob = b64toBlob(blob_data,"application/xlsx");
-            window.navigator.msSaveOrOpenBlob(blob, fname);
-        } else {
-            var a = document.createElement("a");
-            a.style = "display: none";
-            a.href = "data:application/xlsx;base64,"+blob_data;
-            a.download = fname;
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(function () {
-                document.body.removeChild(a);
-            }, 2000);
-        }
+        saveBase64File(fname,"application/xlsx",blob_data);
     });
 
     btn_export.on('click', function () {
@@ -547,35 +583,14 @@ $(document).ready(function () {
         table.DataTable().rows({search: 'applied'}).every(function (rowIdx, tableLoop, rowLoop) {
             var d = this.data();
             var sheet_row = [];
-            sheet_row.push(d[1]);
-            sheet_row.push(d[2]);
-            sheet_row.push(d[3]);
-            sheet_row.push(d[4]);
-            sheet_row.push($.parseHTML(d[5])[0].innerHTML);
-            sheet_row.push(d[6]);
-            sheet_row.push(d[7]);
-            sheet_row.push(d[8]);
-            sheet_row.push(d[9]);
+            sheet_row.push(d[1],d[2],d[3],d[4],$.parseHTML(d[5])[0].innerHTML,d[6],d[7],d[8],d[9]);
             sheet_data.push(sheet_row);
         });
         book.Sheets.Sheet=XLSX.utils.aoa_to_sheet(sheet_data);
         var blob_data = XLSX.write(book, {bookType:'xlsx', bookSST:true, type: 'base64'})
         var dt = new Date();
         var fname = "Export_" + dt.getFullYear() + "_" + (dt.getUTCMonth() + 1) + "_" + dt.getUTCDate() + ".xlsx";
-        if (window.navigator && window.navigator.msSaveOrOpenBlob) {
-            var blob = b64toBlob(blob_data,"application/xlsx");
-            window.navigator.msSaveOrOpenBlob(blob, fname);
-        } else {
-            var a = document.createElement("a");
-            a.style = "display: none";
-            a.href = "data:application/xlsx;base64,"+blob_data;
-            a.download = fname;
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(function () {
-                document.body.removeChild(a);
-            }, 2000);
-        }
+        saveBase64File(fname,"application/xlsx",blob_data);
     });
 
     register_date.off('keypress').keypress(function (e) {
@@ -616,7 +631,9 @@ $(document).ready(function () {
     });
 
     //Start to load all event/users/history resources from webserver
-    loadEvents(loadUsers);
+    loadEvents(loadFinishedCheck);
+    loadUsers(loadFinishedCheck);
+    loadSummer(loadFinishedCheck)
 });
 
 

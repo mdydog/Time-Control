@@ -29,6 +29,9 @@
                 <a class="nav-link" href="{{url("/")}}/calendar">Calendar</a>
             </li>
         </ul>
+        @if(Auth::user()->isInGroup(2))
+            <span style="font-size: 0.6em;font-style: italic;color:white;margin-right: 10px">Server time: {{date("d/m/Y H:i")." UTC"}}</span>
+        @endif
         <i class="fas fa-sign-out-alt fa-2x click text-white" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" title="Logout"></i>
         <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
     </div>
