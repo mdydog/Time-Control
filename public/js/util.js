@@ -6,7 +6,7 @@ var modal_result=false;
 if ($('#user-data').length>0){
     var current_user = JSON.parse($('#user-data')[0].innerHTML);
     current_user.groups = JSON.parse($('#user-groups')[0].innerHTML);
-    current_user.admin=$.inArray(2,current_user.groups)||$.inArray(3,current_user.groups);
+    current_user.admin=$.inArray(2,current_user.groups)>=0||$.inArray(3,current_user.groups)>=0;
 }
 
 function format2digits(num) {
