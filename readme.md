@@ -25,6 +25,10 @@ Laravel Docs: https://laravel.com/docs/6.x
     cd time-control
     composer install
     cp .env.example .env
+    
+You need to generate a .env app_key to work, then put this command (This don't cause any problem with old database or anything):
+    
+    php artisan key:generate 
 
 Configure .env file with your server passwords    
 
