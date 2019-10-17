@@ -18,7 +18,7 @@ function updatePanel(){
     table.DataTable().clear();
     table.DataTable().destroy();
 
-    request('get',url+"api/users",undefined,function (result) {
+    request('get',url+"api/users/all",undefined,function (result) {
         if (result.status === "ok"){
             result.data.forEach(function(row){
                 var groups_data = "";

@@ -21,7 +21,8 @@ Route::get('/api/report/{id}/{from}/{to}', 'ApiController@Report')->where('id', 
 Route::get('/api/report/all/{from}/{to}', 'ApiController@ReportAll')->where('from', '[1-9][0-9]*')->where('to', '[1-9][0-9]*');
 Route::get('/api/events', 'ApiController@Events');
 Route::get('/api/user', 'ApiController@User');
-Route::get('/api/users', 'ApiController@UserList');
+Route::get('/api/users', 'ApiController@UserList')->defaults('all', false);
+Route::get('/api/users/all', 'ApiController@UserList')->defaults('all', true);
 Route::get('/api/summer', 'ApiController@SummerRange');
 
 Route::post('/api/addedituser', 'ApiController@AddEditUser');

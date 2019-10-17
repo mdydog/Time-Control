@@ -503,16 +503,18 @@ class ApiController extends Controller
         return $this->Report($request,-1,$from,$to);
     }
 
-    public function UserList(Request $request)
+    public function UserList(Request $request,$all)
     {
         if (!Auth::user()->isInAnyGroup([2,3])){
             abort(404);
             return;
         }
         if (Auth::user()->isInGroup(2)){
-            $data = DB::table('users')
-                ->join('users_groups', 'users.id', '=', 'users_groups.user')
-                ->get(array(
+            $data = DB::table('users')->join('users_groups', 'users.id', '=', 'users_groups.user');
+            if (!$all){
+                $data = $data->where('users.active','=',1);
+            }
+            $data = $data->get(array(
                     'users.id',
                     'name',
                     'mins',
@@ -524,11 +526,16 @@ class ApiController extends Controller
                 ))->all();
         }
         else{
-            $data = DB::table('users')
-                ->join('users_groups', 'users.id', '=', 'users_groups.user')
-                ->where('users.supervisor','=',Auth::id())
-                ->orWhere('users.id','=',Auth::id())
-                ->get(array(
+            $data = DB::table('users')->join('users_groups', 'users.id', '=', 'users_groups.user');
+            $data = $data->where('users.supervisor','=',Auth::id());
+            if (!$all){
+                $data = $data->where('users.active','=',1);
+            }
+            $data = $data->orWhere('users.id','=',Auth::id());
+            if (!$all){
+                $data = $data->where('users.active','=',1);
+            }
+            $data = $data->get(array(
                     'users.id',
                     'name',
                     'mins',

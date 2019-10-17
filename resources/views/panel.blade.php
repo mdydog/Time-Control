@@ -143,25 +143,14 @@
                                     <label>Select User: </label>
                                     <select id="usr_list" class="custom-select" style="width: auto;">
                                         <option value="-2">All</option>
-                                        @php
-                                            if (Auth::user()->isInGroup(2)){
-                                                $users = User::all();
-                                                foreach ($users as $user){
-                                                    echo '<option value="'.$user->id.'">'.$user->name.'</option>';
-                                                }
-                                            }
-                                            else{
-                                                $users = User::where('supervisor','=',Auth::id())->get()->all();
-                                                foreach ($users as $user){
-                                                    echo '<option value="'.$user->id.'">'.$user->name.'</option>';
-                                                }
-                                            }
-                                        @endphp
                                     </select><br><br>
                                 @endif
                                 <span>Range from: <input id="datepickerfrom" autocomplete="off" type="text" class="form-control datetimepicker-input" style="display:inline;width:auto;"  data-toggle="datetimepicker" data-target="#datepickerfrom"/> To: <input id="datepickerto" autocomplete="off" type="text" class="form-control datetimepicker-input" style="display:inline;width:auto;"  data-toggle="datetimepicker" data-target="#datepickerto"/></span>
                                 @if(Auth::user()->isInAnyGroup([2,3]) && Request::is('admin'))
                                     <br><br><input type="checkbox" id="hide_current"/> <label for="hide_current">Hide my user from history</label>
+                                @endif
+                                @if(Auth::user()->isInAnyGroup([2,3]) && Request::is('admin'))
+                                    <br><br><input type="checkbox" id="show_disabled_users"/> <label for="show_disabled_users">Show Disabled Users</label>
                                 @endif
                             </div>
                         </div>

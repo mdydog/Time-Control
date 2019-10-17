@@ -17,6 +17,7 @@ var btn_export_totals = $('#btn_export_totals');
 var datefrom = $('#datepickerfrom');
 var dateto = $('#datepickerto');
 var hide_current = $('#hide_current'); //hide current user checkbox
+var show_disabled_users = $('#show_disabled_users');
 
 //modal elements
 var btn_register = $('#btn_register');
@@ -108,8 +109,14 @@ function updatePanel() {
         if (result.status === "ok") {
             current_time_data = result.data;
             result.data.forEach(function (row) {
-                if (!(admin_panel_mode && hide_current.is(":checked") && row.user === current_user.id)){ //hide current user
-                    insertHistoryRow(row,mindateweek);
+                for(var i_user = 0;i_user<users.length;i_user++){//only if user exists in users array
+                    var usr = users[i_user];
+                    if (row.user === usr.id){
+                        if (!(admin_panel_mode && hide_current.is(":checked") && row.user === current_user.id)){ //hide current user
+                            insertHistoryRow(row,mindateweek);
+                        }
+                        break;
+                    }
                 }
             });
         }
@@ -491,9 +498,21 @@ function loadFinishedCheck() {
 }
 
 function loadUsers(cb) {
-    request('get',url + "api/user" + (admin_panel_mode ? "s" : ""),undefined,function (result) {
+    var lnk = url + "api/user";
+    if (admin_panel_mode){
+        lnk+="s";
+        if (show_disabled_users.is(":checked")){
+            lnk+="/all";
+        }
+    }
+    request('get',lnk,undefined,function (result) {
         if (admin_panel_mode) {
             users = result.data;
+            usr_list_select[0].innerHTML="<option value=\"-2\">All</option>";
+            for(var i = 0;i<users.length;i++){
+                var usr=users[i];
+                usr_list_select.append('<option value="'+usr.id+'">'+usr.name+'</option>');
+            }
         } else {
             users.push(result.data);
         }
@@ -634,6 +653,9 @@ $(document).ready(function () {
     });
     hide_current.change(function (e) {
        updatePanel();
+    });
+    show_disabled_users.change(function (e) {
+        loadUsers(loadFinishedCheck);
     });
 
     //Start to load all event/users/history resources from webserver
