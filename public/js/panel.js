@@ -218,11 +218,15 @@ function insertHistoryRow(row,minimun_date_week){
     }
 
     var status_icon = "";
-    if (final_seconds > maxfseconds) {
-        status_icon = "<i class=\"fas fa-exclamation-triangle fa-warning\" title='Too much time in your working day!'></i>";
+    if (final_seconds > maxfseconds+(30*60)) {
+        status_icon = "<i class=\"fas fa-exclamation-triangle fa-warning\" title='Working hours(" + secondsAmount(maxfseconds) + ") exceeded!'></i>";
+        warning_days++;
+    }
+    else if (final_seconds < maxfseconds-(30*60)) {
+        status_icon = "<i class=\"fas fa-exclamation-triangle fa-warning\" title='Working hours(" + secondsAmount(maxfseconds) + ") not reached!'></i>";
         warning_days++;
     } else if (date !== regisDate) {
-        status_icon = "<i class=\"fas fa-exclamation-triangle fa-warning\" title=\"Your registration date was after your working date! Don't do that!!\"></i>";
+        status_icon = "<i class=\"fas fa-exclamation-triangle fa-warning\" title=\"Registration date is different of working date! Please register the time on same day!\"></i>";
         warning_days++;
     } else {
         status_icon = "<i class=\"fas fa-check-circle fa-ok\" title='Everything ok'></i>";
@@ -548,7 +552,9 @@ $(document).ready(function () {
                         else{
                             wmin=user.mins;
                         }
-                        if (row.end_hour - row.start_hour - row.breaktime > wmin * 60 ||
+                        //if (final_seconds > maxfseconds+(30*60) || final_seconds < maxfseconds-(30*60)) {
+                        if (row.end_hour - row.start_hour - row.breaktime > wmin * 60+(30*60) ||
+                            row.end_hour - row.start_hour - row.breaktime < wmin * 60-(30*60) ||
                             setTimeZero(new Date(row.date * 1000)).getTime() !== setTimeZero(new Date(row.register_date * 1000)).getTime()) {
                             warningDays++;
                         }
