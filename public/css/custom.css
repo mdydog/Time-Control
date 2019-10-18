@@ -76,11 +76,6 @@ pre {
     background-color: lightskyblue;
 }
 
-.cevent-list li.rejected{
-    background-color: #f8d7da;
-    color:#721c24;
-}
-
 .cevent-list li span{
     font-style: italic;
     font-size: 0.7em;
@@ -115,6 +110,9 @@ pre {
 }
 .fa-warning{
     color:yellow;text-shadow: 0 0 3px #000;
+}
+.fa-error{
+    color:red;
 }
 .click{
     cursor:pointer;

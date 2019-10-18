@@ -114,8 +114,7 @@ class FakeData extends Command
             'user' => $user,
             'from' => $pfrom->getTimestamp(),
             'to' => $pto->getTimestamp(),
-            'comment' => $comment,
-            'approved' => 1,
+            'comment' => $comment
         ]);
     }
 

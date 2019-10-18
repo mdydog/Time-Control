@@ -323,34 +323,26 @@ class ApiController extends Controller
             'user' => $usr,
             'from' => $datefrom,
             'to' => $dateto,
-            'comment' => $comment.($usr!==null?", ".$user->name:""),
-            'approved' => $approved
+            'comment' => $comment.($usr!==null?", ".$user->name:"")
         ]);
 
         return $this->response(200,array('status'=>'ok'));
     }
 
-    public function SetEventStatus(Request $request)
+    public function RemoveEvent(Request $request)
     {
         Validator::make($request->all(), [
-            'id' => 'required|integer',
-            'status' => 'required|integer'
+            'id' => 'required|integer'
         ])->validate();
 
         $user = Auth::user();
         $event = Event::where('id','=',$request['id'])->get()->first();
-        $status = intval($request["status"]);
-        if ($status!==1 && $status!==2){
-            return $this->response(200,array('status'=>'error','msg'=>'Unknown status'));
-        }
 
-        if ($event->approved === 0 && (
-            $user->isInGroup(2)||
+        if ($user->isInGroup(2)||
             $user->isInGroup(3) &&
                 $event->user !== null &&
-                count(User::where('supervisor','=',$user->id)->where('id','=',$event->user)->get()->all())>0)){
-            $event->approved=$status;
-            $event->save();
+                count(User::where('supervisor','=',$user->id)->where('id','=',$event->user)->get()->all())>0){
+            $event->delete();
         }
         else{
             return $this->response(200,array('status'=>'error','msg'=>'No access'));

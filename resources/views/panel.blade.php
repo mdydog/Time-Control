@@ -45,7 +45,30 @@
     </div>
     @endif
     <div class="container-fluid">
+        @if(!Request::is('admin'))
         <div class="row mt-3">
+            <div class="col-md-12">
+                <div id="register_card" class="card p-4" style="display: none">
+                    <div class="row">
+                        <div class="col-md-12 text-center">
+                            <h2>IMDEA Networks</h2>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 text-center">
+                            <p>Employee: {{ Auth::user()->name }}</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="offset-md-5 col-md-2">
+                            <p><button id="btn_register" class="col-md-12 btn btn-primary">Register working day</button></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+        <div class="row mt-3 d-none d-md-flex">
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-body">
@@ -71,7 +94,7 @@
                 </div>
             </div>
         </div>
-        <div class="row mt-3">
+        <div class="row mt-3 d-none d-md-flex">
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-body">
@@ -97,32 +120,13 @@
                 </div>
             </div>
         </div>
-        <div class="row mt-3">
+        <div class="row mt-3" id="loading_card">
             <div class="col-md-12">
-                <div id="loading_card" class="card p-4">
+                <div class="card p-4">
                     <div class="text-center">
                         <h3>Loading... <i class="fas fa-circle-notch fa-spin"></i></h3>
                     </div>
                 </div>
-                @if(!Request::is('admin'))
-                    <div id="register_card" class="card p-4" style="display: none">
-                        <div class="row">
-                            <div class="col-md-12 text-center">
-                                <h2>IMDEA Networks</h2>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12 text-center">
-                                <p>Employee: {{ Auth::user()->name }}</p>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="offset-md-5 col-md-2">
-                                <p><button id="btn_register" class="col-md-12 btn btn-primary">Register working day</button></p>
-                            </div>
-                        </div>
-                    </div>
-                @endif
             </div>
         </div>
         <div class="row mt-3 mb-3">

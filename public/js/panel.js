@@ -64,7 +64,7 @@ function insideSummer(unix_seconds) {
 function insideEvent(unix_seconds, uid) {
     for (var i = 0; i < events.length; i++) {
         var event = events[i];
-        if ((event.user === uid || event.user === null) && event.approved === 1) { //evento propio o festivo aprobado
+        if (event.user === uid || event.user === null) { //evento propio o festivo aprobado
             if (unix_seconds >= event.from && unix_seconds <= event.to) {
                 return true;
             }
@@ -200,7 +200,7 @@ function insertHistoryRow(row,minimun_date_week){
     var buttons = "";
     if (admin_panel_mode) {
         if (row.editable===0){
-            buttons = "<i class=\"fas fa-highlighter click\" onclick=\"enableOneEdit(event,"+row.id+")\" title='Enable one time edit mode'></i>";
+            //buttons = "<i class=\"fas fa-highlighter click\" onclick=\"enableOneEdit(event,"+row.id+")\" title='Enable one time edit mode'></i>";
         }
     } else {
         if (dateFormat(new Date(), false) === regisDate || row.editable) {
@@ -226,11 +226,11 @@ function insertHistoryRow(row,minimun_date_week){
 
     var status_icon = "";
     if (final_seconds > maxfseconds+(30*60)) {
-        status_icon = "<i class=\"fas fa-exclamation-triangle fa-warning\" title='Working hours(" + secondsAmount(maxfseconds) + ") exceeded!'></i>";
+        status_icon = "<i class=\"fas fa-exclamation-circle fa-error\" title='Working hours(" + secondsAmount(maxfseconds) + ") exceeded!'></i>";
         warning_days++;
     }
     else if (final_seconds < maxfseconds-(30*60)) {
-        status_icon = "<i class=\"fas fa-exclamation-triangle fa-warning\" title='Working hours(" + secondsAmount(maxfseconds) + ") not reached!'></i>";
+        status_icon = "<i class=\"fas fa-exclamation-circle fa-error\" title='Working hours(" + secondsAmount(maxfseconds) + ") not reached!'></i>";
         warning_days++;
     } else if (date !== regisDate) {
         status_icon = "<i class=\"fas fa-exclamation-triangle fa-warning\" title=\"Registration date is different of working date! Please register the time on same day!\"></i>";
@@ -292,7 +292,7 @@ function periodExpectedCalculation(rdate,rtodate,user){
 function showReportTable() {
     $('#report_card').show();
     if (admin_panel_mode) {
-        $('#loading_card').parent().parent().hide();
+        $('#loading_card').hide();
     } else {
         $('#register_card').show();
         $('#loading_card').hide();
@@ -302,7 +302,7 @@ function showReportTable() {
 function hideReportTable(){
     $('#report_card').hide();
     if (admin_panel_mode) {
-        $('#loading_card').parent().parent().show(); //loading card
+        $('#loading_card').show(); //loading card
     } else {
         $('#loading_card').show(); //loading card
         $('#register_card').hide(); //loading card

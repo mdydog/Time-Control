@@ -13,6 +13,6 @@ class Event extends Model
 {
     protected $table = 'events';
     protected $fillable = [
-        'user', 'from', 'to','approved','comment'
+        'user', 'from', 'to','comment'
     ];
 }

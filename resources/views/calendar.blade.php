@@ -1,6 +1,19 @@
 @extends('layouts.app')
 
 @section('content')
+    <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true" id="confirm-modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Do you want to remove that event?</h5>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" id="confirm-modal-btn-yes">Yes</button>
+                    <button type="button" class="btn btn-primary" id="confirm-modal-btn-no">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="modal fade" id="addEvent" tabindex="-1" role="dialog" aria-labelledby="addEventLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -50,6 +63,9 @@
                             <button class="btn btn-primary mt-4 mb-4" id="btn_add_event">Add event</button>
                             <h3>Next events:</h3>
                             <ul class="cevent-list" id="event_list">
+                            </ul>
+                            <h3 class="mt-5">Past events(Month):</h3>
+                            <ul class="cevent-list" id="past_event_list">
                             </ul>
                         </div>
                         <div class="col-md-8">

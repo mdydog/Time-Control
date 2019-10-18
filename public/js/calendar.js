@@ -1,6 +1,8 @@
 var btn_add_event = $('#btn_add_event');
 var addEvent_modal = $('#addEvent');
 var event_list = $('#event_list');
+var past_event_list = $('#past_event_list');
+
 var calendarEl = $('#calendar');
 
 var summerdiv = $('#summerdiv');
@@ -11,6 +13,7 @@ var modal_title = $('#title');
 var modal_error = $('#error_alert');
 
 var calendar=null;
+var events=null;
 
 if (current_user.admin){
     var ufest = $('#ufest');
@@ -53,13 +56,19 @@ function saveSummerDates(e){
 function updateCalendar(){
     request('get',url+"api/events",undefined,function (result) {
         if (result.status === "ok"){
-            result.data.forEach(function(row){
-                var now =parseInt((setTimeZero(new Date())).getTime()/1000);
-                if (parseInt(row.from) >= now || parseInt(row.to) >= now){
-                    insertEvent(row);
-                }
+            events = result.data;
+            events.forEach(function(row){
+                insertEvent(row,true);
             });
+            calendar.render();
         }
+    });
+}
+function updateLists(){
+    event_list[0].innerHTML="";
+    past_event_list[0].innerHTML="";
+    events.forEach(function(row){
+        insertEvent(row,false);
     });
 }
 
@@ -67,26 +76,8 @@ function go(miliseconds) {
     calendar.gotoDate(new Date(miliseconds));
 }
 
-function insertEvent(event){
-    var cs = "";
-    if (event.user===null){
-        cs = "fest";
-    }
-    else if (event.approved===1){
-        cs = "approved";
-    }
-    else if (event.approved===2){
-        cs = "rejected";
-    }
-
-    var date_ranges=" <span>"+dateFormat(new Date(event.from*1000))+(event.from!==event.to?"-"+dateFormat(new Date(event.to*1000)):"")+"</span>";
-    var approved_label=(event.approved===1||event.approved===2?"<span class=\"status\">("+cs.replace(cs.charAt(0),cs.charAt(0).toUpperCase())+")</span>":"");
-    var adm_btn="";
-    if (current_user.admin && event.approved===0){
-        adm_btn="<div class=\"text-right\"><button class=\"btn btn-primary btn-sm\" onclick=\"setEventStatus(event,1,"+event.id+")\">Accept</button> <button class=\"btn btn-danger btn-sm\" onclick=\"setEventStatus(event,2,"+event.id+")\">Reject</button></div>"
-    }
-    var html = "<li"+(cs!==""?" onclick=\"go("+(event.from*1000)+")\" class=\""+cs+"\"":"")+">"+fixXSS(event.comment)+approved_label+adm_btn+date_ranges+"</li>";
-    if (event.approved!==2){
+function insertEvent(event,mode_calendar){
+    if (mode_calendar){
         var edate=new Date(event.to*1000);
         edate.setUTCDate(edate.getUTCDate()+1);
         calendar.addEvent({
@@ -94,29 +85,69 @@ function insertEvent(event){
             start: new Date(event.from*1000),
             end: edate,
             allDay: true,
-            color: event.user===null?"#90EE90":(event.approved===1?"#87CEFA":"#bfbfbf")
+            color: event.user===null?"#90EE90":"#87CEFA"
         });
-    }
-
-    event_list.append(html);
-}
-
-function setEventStatus(e,status,id) {
-    e.preventDefault();
-    if (status !== 1 && status !== 2){
         return;
     }
-    var b =  $(e.currentTarget);
-    request('post',url+"/api/seteventstatus",{status: status,id: id},function (result) {
-        if (result.status === "ok"){
-            notify("Success","success");
-            b.parent().hide();
-            b.parent().parent().attr('class',(status===1?"approved":"rejected"));
+
+    var now =parseInt((setTimeZero(new Date())).getTime()/1000);
+    var passed=!(parseInt(event.from) >= now || parseInt(event.to) >= now);
+
+    var liclass = "approved";
+    var cs = "";
+    if (event.user===null){
+        cs = "Fest";
+        liclass="fest";
+    }
+    else{
+        liclass="approved";
+    }
+
+    if (passed){
+        liclass="";
+    }
+    var date_ranges=" <span>"+dateFormat(new Date(event.from*1000))+(event.from!==event.to?"-"+dateFormat(new Date(event.to*1000)):"")+"</span>";
+    var approved_label=(cs!==""?"<span class=\"status\">("+cs+")</span>":"");
+    var adm_btn="";
+    if (current_user.admin){
+        adm_btn="<div class=\"text-right\" style='display: inline'> <i class=\"fas fa-minus-circle fa-error\" style='background-color: white;border-radius: 100px;' onclick=\"removeEvent(event,"+event.id+")\"></i></div>"
+    }
+    var html = "<li onclick=\"go("+(event.from*1000)+")\" class=\""+liclass+"\">"+fixXSS(event.comment)+approved_label+adm_btn+date_ranges+"</li>";
+
+
+    if (!passed) {
+        event_list.append(html);
+    }
+    else{
+        var cm=calendar.getDate();
+        var ef=new Date(event.from*1000);
+        var et=new Date(event.to*1000);
+        if (cm.getUTCFullYear()===ef.getUTCFullYear() && cm.getUTCMonth()+1===ef.getUTCMonth()|| cm.getUTCFullYear()===et.getUTCFullYear() && cm.getUTCMonth()+1===et.getUTCMonth()){
+            past_event_list.append(html);
         }
-        else{
-            notify("Error!","error");
-        }
+    }
+}
+
+function removeEvent(e,id) {
+    e.preventDefault();
+    var modal=$("#confirm-modal");
+    $("#confirm-modal-btn-yes").off('click').on("click", function(){
+        request('post',url+"/api/removeevent",{id: id},function (result) {
+            if (result.status === "ok"){
+                notify("Success","success");
+                location.reload();
+            }
+            else{
+                notify("Error!","error");
+            }
+        });
+        modal.modal('hide');
     });
+
+    $("#confirm-modal-btn-no").off('click').on("click", function(){
+        modal.modal('hide');
+    });
+    modal.modal("show");
 }
 
 function addEvent(e){
@@ -170,9 +201,16 @@ $(document).ready(function(){
         selectMirror: false,
         editable: false,
         eventLimit: true, // allow "more" link when too many events
+        datesRender: function (info) {
+            updateLists();
+        }
     });
+    var datefix=new Date();
+    datefix.setUTCDate(1);
+    datefix=setTimeZero(datefix);
+    datefix.setHours(0);
+    calendar.gotoDate(datefix);
 
-    calendar.render();
 
     var d = getOnlyDate();
     var d2 = getOnlyDate();
