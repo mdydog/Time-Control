@@ -1,6 +1,7 @@
 var table = $('#report');
 
 var btn_add_user = $('#btn_add_user');
+var btn_import = $('#btn_import');
 var add_user_modal = $('#addEditUser');
 var add_user_error_alert = $('#add_user_error_alert');
 
@@ -187,7 +188,45 @@ $(document).ready(function(){
     btn_add_user.click(function (e) {
         userModal(e);
     });
+    btn_import.click(function (e) {
+        $("#import_input").val(null);
+       $('#import_input').click();
+    });
+    $("#import_input").change(function(){
+        var file = document.getElementById("import_input").files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.readAsText(file, "UTF-8");
+            reader.onload = function (evt) {
+                try{
+                    var rows = $.csv.toArrays(evt.target.result);
+                }
+                catch (e) {
+                    notify("Error reading file",'error');
+                    return;
+                }
 
+                rows.splice(0,1); //remove first row
+                notify("Processing...",'success');
+                request('post',url+"api/import/users",{users:rows},function (result) {
+                    if (result.status === "ok"){
+                        notify(rows.length+" users was added",'success');
+                        setTimeout(function () {
+                            location.reload();
+                        },1000);
+
+                    }
+                    else{
+                        notify("Process canceled","error");
+                        notify(result.msg,"error");
+                    }
+                });
+            };
+            reader.onerror = function (evt) {
+                notify("Error reading file",'error');
+            };
+        }
+    });
     updatePanel();
 });
 

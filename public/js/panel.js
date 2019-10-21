@@ -203,11 +203,11 @@ function insertHistoryRow(row,minimun_date_week){
             //buttons = "<i class=\"fas fa-highlighter click\" onclick=\"enableOneEdit(event,"+row.id+")\" title='Enable one time edit mode'></i>";
         }
     } else {
-        if (dateFormat(new Date(), false) === regisDate || row.editable) {
-            buttons = "<i class=\"fas fa-edit click fa-ok\" title='Edit' onclick='editCommentModal(event," + row.id + ",true," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
-        } else {
-            buttons = "<i class=\"fas fa-edit click\" title='Edit comment' onclick='editCommentModal(event," + row.id + ",false," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
-        }
+        //if (dateFormat(new Date(), false) === regisDate || row.editable) {
+            buttons = "<i class=\"fas fa-edit click\" title='Edit' onclick='editCommentModal(event," + row.id + ",true," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
+        //} else {
+            //buttons = "<i class=\"fas fa-edit click\" title='Edit comment' onclick='editCommentModal(event," + row.id + ",false," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
+        //}
     }
 
     var maxfseconds = 0;
@@ -316,7 +316,8 @@ function reloadRegisterDatePicker(){
         format: 'L',
         locale: 'es',
         daysOfWeekDisabled: [0, 6],
-        disabledDates: disabledDates
+        disabledDates: disabledDates,
+        ignoreReadonly: true
     });
     dp.datetimepicker('maxDate', moment());
 }
@@ -529,8 +530,19 @@ $(document).ready(function () {
         register_modal.find(".modal-title").text("Register working day");
         current_edit_id = 0;
         register_error_alert.hide();
+
         register_from_hour.val("");
         register_to_hour.val("");
+
+        var from = "";
+        var to = "";
+        var d = table.DataTable().row().data();
+        if (d!==undefined){
+            from = d[3];
+            to = d[4];
+        }
+        register_from_hour.val(from);
+        register_to_hour.val(to);
         register_break.val("60");
         register_comment.val("");
         register_date.parent().parent().show();
@@ -632,6 +644,7 @@ $(document).ready(function () {
         format: 'L',
         defaultDate: new Date().setUTCDate(1),
         locale: 'es',
+        ignoreReadonly: true
         //maxDate: new Date().setUTCDate(daysInMonth(new Date().getUTCMonth() + 1, new Date().getFullYear()))
     });
     dateto.datetimepicker({
@@ -639,7 +652,8 @@ $(document).ready(function () {
         format: 'L',
         defaultDate: new Date().setUTCDate(daysInMonth(new Date().getUTCMonth() + 1, new Date().getFullYear())),
         locale: 'es',
-        minDate: new Date().setUTCDate(0)
+        minDate: new Date().setUTCDate(0),
+        ignoreReadonly: true
     });
     datefrom.on("change.datetimepicker", function (e) {
         if (getUnixFromDatepicker(dateto)<getUnixFromDatepicker(datefrom)){

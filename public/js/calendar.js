@@ -79,7 +79,7 @@ function go(miliseconds) {
 function insertEvent(event,mode_calendar){
     if (mode_calendar){
         var edate=new Date(event.to*1000);
-        edate.setUTCDate(edate.getUTCDate()+1);
+        edate.setUTCDate(edate.getUTCDate()+1);//fix, date don't reach to date in fullcalendar
         calendar.addEvent({
             title: fixXSS(event.comment),
             start: new Date(event.from*1000),
@@ -122,7 +122,7 @@ function insertEvent(event,mode_calendar){
         var cm=calendar.getDate();
         var ef=new Date(event.from*1000);
         var et=new Date(event.to*1000);
-        if (cm.getUTCFullYear()===ef.getUTCFullYear() && cm.getUTCMonth()+1===ef.getUTCMonth()|| cm.getUTCFullYear()===et.getUTCFullYear() && cm.getUTCMonth()+1===et.getUTCMonth()){
+        if (cm.getUTCFullYear()===ef.getUTCFullYear() && cm.getUTCMonth()===ef.getUTCMonth()|| cm.getUTCFullYear()===et.getUTCFullYear() && cm.getUTCMonth()===et.getUTCMonth()){
             past_event_list.append(html);
         }
     }
@@ -167,15 +167,30 @@ function addEvent(e){
         return;
     }
 
-    var comment = modal_title.val();
-    if (comment === null || comment === undefined || comment==="" ||  comment===" "){
-        modal_error.text("Wrong event title");
-        modal_error.show();
-        return;
+
+
+    var fest = (current_user.admin?(ufest.is(":checked")?1:0):0);
+
+
+    if (fest===1){
+        var title = $('#title2').val();
+        if (title === null || title === undefined || title==="" || title.trim()===""){
+            modal_error.text("Wrong title");
+            modal_error.show();
+            return;
+        }
+    }
+    else{
+        var title = parseInt(modal_title.find(":selected").val());
+        if (title === null || title === undefined || title===0){
+            modal_error.text("Please select the title");
+            modal_error.show();
+            return;
+        }
     }
 
     modal_error.hide();
-    request('post',url+"/api/addevent",{fest: (current_user.admin?(ufest.prop("checked") === true?1:0):0),datefrom: date_from,dateto: date_to,comment: comment},function (result) {
+    request('post',url+"/api/addevent",{fest: fest,datefrom: date_from,dateto: date_to,title: title},function (result) {
         if (result.status==="ok"){
             location.reload();
         }
@@ -189,6 +204,7 @@ function addEvent(e){
 
 $(document).ready(function(){
     calendar = new FullCalendar.Calendar(calendarEl[0], {
+        timeZone: 'UTC',
         plugins: [ 'interaction', 'dayGrid' ],
         header: {
             left: 'today',
@@ -205,16 +221,14 @@ $(document).ready(function(){
             updateLists();
         }
     });
-    var datefix=new Date();
-    datefix.setUTCDate(1);
-    datefix=setTimeZero(datefix);
-    datefix.setHours(0);
-    calendar.gotoDate(datefix);
+    //var datefix=new Date();
+    //datefix.setUTCDate(1);
+    //datefix=setTimeZero(datefix);
+   //datefix.setHours(0);
+    //calendar.gotoDate(datefix);
 
 
     var d = getOnlyDate();
-    var d2 = getOnlyDate();
-    d2.setUTCDate(d.getUTCDate()+1);
     var dmin = getOnlyDate();
     dmin.setUTCDate(d.getUTCDate()-1);
 
@@ -229,14 +243,16 @@ $(document).ready(function(){
         format: 'L',
         defaultDate: d,
         locale: 'es',
+        ignoreReadonly:true
         //maxDate: d2
     });
     dateto.datetimepicker({
         useCurrent: false,
         format: 'L',
-        defaultDate: d2,
+        defaultDate: d,
         locale: 'es',
-        minDate: dmin
+        minDate: datefrom.datetimepicker('viewDate')._d,//dateFromDatepicker(datefrom),
+        ignoreReadonly:true
     });
     datefrom.on("change.datetimepicker", function (e) {
         if (getUnixFromDatepicker(dateto)<getUnixFromDatepicker(datefrom)){
@@ -245,10 +261,15 @@ $(document).ready(function(){
         dateto.datetimepicker('minDate', e.date);
     });
 
+
     btn_add_event.click(function (e) {
         e.preventDefault();
         addEvent_modal.modal();
     });
+
+    datefrom.val(dateFormat(dateFromDatepicker(datefrom)));
+    dateto.val(dateFormat(dateFromDatepicker(dateto)));
+
 
     updateCalendar();
 });

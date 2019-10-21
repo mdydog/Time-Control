@@ -76,6 +76,9 @@
                 <div class="row">
                     <div class="col-md-12">
                         <button class="btn btn-primary" id="btn_add_user">Add User</button>
+                        <button class="btn btn-primary" id="btn_import" title="Format: CSV (separated by ,) Name, Last Name, Mail, Hours, Summer Hours, Supervisor Mail, Is admin(1,0) (First row will be ignored)">Import</button>
+                        <input type="file" id="import_input" style="display:none">
+
                     </div>
                 </div>
                 <hr>

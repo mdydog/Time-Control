@@ -25,6 +25,7 @@ Route::get('/api/users', 'ApiController@UserList')->defaults('all', false);
 Route::get('/api/users/all', 'ApiController@UserList')->defaults('all', true);
 Route::get('/api/summer', 'ApiController@SummerRange');
 
+Route::post('/api/import/users', 'ApiController@ImportUsers');
 Route::post('/api/addedituser', 'ApiController@AddEditUser');
 Route::post('/api/addevent', 'ApiController@AddEvent');
 Route::post('/api/removeevent', 'ApiController@RemoveEvent');

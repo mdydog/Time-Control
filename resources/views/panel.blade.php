@@ -16,7 +16,7 @@
                     <div class="form-group">
                         <label for="rday" class="col-form-label">Date*:</label>
                         <div class="input-group date" id="datetimepicker" data-target-input="nearest">
-                            <input id="rday" autocomplete="off" type="text" class="form-control datetimepicker-input"  data-toggle="datetimepicker" data-target="#datetimepicker" required/>
+                            <input id="rday" autocomplete="off" type="text" class="form-control datetimepicker-input white-readonly"  data-toggle="datetimepicker" data-target="#datetimepicker" required readonly/>
                         </div>
                     </div>
                     <div class="form-group">
@@ -149,7 +149,7 @@
                                         <option value="-2">All</option>
                                     </select><br><br>
                                 @endif
-                                <span>Range from: <input id="datepickerfrom" autocomplete="off" type="text" class="form-control datetimepicker-input" style="display:inline;width:auto;"  data-toggle="datetimepicker" data-target="#datepickerfrom"/> To: <input id="datepickerto" autocomplete="off" type="text" class="form-control datetimepicker-input" style="display:inline;width:auto;"  data-toggle="datetimepicker" data-target="#datepickerto"/></span>
+                                <span>Range from: <input id="datepickerfrom" autocomplete="off" type="text" class="form-control datetimepicker-input white-readonly" style="display:inline;width:auto;"  data-toggle="datetimepicker" data-target="#datepickerfrom" readonly/> To: <input id="datepickerto" autocomplete="off" type="text" class="form-control datetimepicker-input white-readonly" style="display:inline;width:auto;"  data-toggle="datetimepicker" data-target="#datepickerto" readonly/></span>
                                 @if(Auth::user()->isInAnyGroup([2,3]) && Request::is('admin'))
                                     <br><br><input type="checkbox" id="hide_current"/> <label for="hide_current">Hide my user from history</label>
                                 @endif

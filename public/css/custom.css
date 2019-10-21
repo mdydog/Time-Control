@@ -57,23 +57,25 @@ pre {
     padding: 0px;
     list-style-type: none;
 }
-.cevent-list{
+/*.cevent-list{
     border-top: 1px solid gray;
-}
+}*/
 .cevent-list li{
-    border-right: 1px solid gray;
-    border-bottom: 1px solid gray;
-    border-left: 1px solid gray;
     padding: 5px;
     cursor:pointer;
+    border: 1px solid lightgray;
+    border-radius: 8px;
+    margin-top: 5px;
 }
 
 .cevent-list li.fest{
     background-color: lightgreen;
+    border: 1px solid #7cda7c;
 }
 
 .cevent-list li.approved{
     background-color: lightskyblue;
+    border: 1px solid #5fa6d2;
 }
 
 .cevent-list li span{
@@ -90,6 +92,7 @@ pre {
 
 .cevent-list li:hover{
     background-color: lightgray;
+    border: 1px solid lightgray;
 }
 .notifyjs-bootstrap-error,.notifyjs-bootstrap-success{
     background-image: none !important;
@@ -116,4 +119,7 @@ pre {
 }
 .click{
     cursor:pointer;
+}
+.white-readonly{
+    background-color: white !important;
 }

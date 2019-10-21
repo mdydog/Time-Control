@@ -28,22 +28,30 @@
                     <div class="form-group">
                         <label for="datefrom" class="col-form-label">Date Start*:</label>
                         <div class="input-group date" id="datefrom1" data-target-input="nearest">
-                            <input id="datefrom" autocomplete="off" type="text" class="form-control datetimepicker-input" data-toggle="datetimepicker" data-target="#datefrom" required/>
+                            <input id="datefrom" autocomplete="off" type="text" class="form-control datetimepicker-input white-readonly" data-toggle="datetimepicker" data-target="#datefrom" required readonly/>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="dateto" class="col-form-label">Date End*:</label>
                         <div class="input-group date" id="dateto1" data-target-input="nearest">
-                            <input id="dateto" autocomplete="off" type="text" class="form-control datetimepicker-input" data-toggle="datetimepicker" data-target="#dateto" required/>
+                            <input id="dateto" autocomplete="off" type="text" class="form-control datetimepicker-input white-readonly" data-toggle="datetimepicker" data-target="#dateto" required readonly/>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="comment">Title*:</label>
-                        <input type="text" class="form-control" id="title" title="Vacations/Reason/Event name" required/>
+                        <label for="title">Title*:</label>
+                        <select class="custom-select" id="title">
+                            <option value="0" selected>Select one</option>
+                            <option value="1">Vacations</option>
+                            <option value="2">Leave (Sick, Maternity, Paternity etc...)</option>
+                        </select>
                     </div>
                     @if (Auth::user()->isInGroup(2))
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="ufest"><label for="ufest" class="form-check-label">Holiday</label>
+                        </div>
+                        <div class="form-group">
+                            <label for="title2">Holiday Title (This ignore selected title)*:</label>
+                            <input type="text" class="form-control" id="title2" title="Event name"/>
                         </div>
                     @endif
                 </div>
@@ -64,7 +72,8 @@
                             <h3>Next events:</h3>
                             <ul class="cevent-list" id="event_list">
                             </ul>
-                            <h3 class="mt-5">Past events(Month):</h3>
+                            <hr class="mt-5">
+                            <h3>Past events(Month):</h3>
                             <ul class="cevent-list" id="past_event_list">
                             </ul>
                         </div>

@@ -169,6 +169,128 @@ class ApiController extends Controller
         return $this->response(200,array('status'=>'ok','data'=>SummerDate::all()));
     }
 
+    public function ImportUsers(Request $request){
+        if (!Auth::user()->isInGroup(2)){
+            abort(404);
+            return;
+        }
+        Validator::make($request->all(), [
+            'users' => 'required'
+        ])->validate();
+
+        $import_users = $request['users'];
+
+        DB::beginTransaction();
+        foreach ($import_users as $user){
+            if ($user[2]===NULL || !filter_var($user[2], FILTER_VALIDATE_EMAIL)){ //EMAIL CHECK
+                DB::rollBack();
+                return $this->response(200,array('status'=>'error','msg'=>'Wrong email: '.($user[2]===NULL?"NULL":$user[2])));
+            }
+            if (count(User::where('email','=',$user[2])->get()->all())>0){ //EMAIL EXISTS CHECK
+                DB::rollBack();
+                return $this->response(200,array('status'=>'error','msg'=>'User '.$user[2].' already exists'));
+            }
+            if ($user[0]===NULL || trim($user[0]) === ""){ //NAME CHECK
+                DB::rollBack();
+                return $this->response(200,array('status'=>'error','msg'=>'Wrong name for user '.$user[2]));
+            }
+            if ($user[1]===NULL || trim($user[1]) === ""){ //LAST NAME CHECK
+                DB::rollBack();
+                return $this->response(200,array('status'=>'error','msg'=>'Wrong last name for user '.$user[2]));
+            }
+            $hours = $user[3];
+            if ($user[3]===NULL){ //HOURS CHECK
+                $hours = 8*60;
+            }
+            else{
+                try{
+                    if (!is_numeric($hours)){
+                        $hours = explode(":",$hours);
+                        $hours = intval($hours[0])*60 + intval($hours[1]);
+                    }
+                    else{
+                        $hours = intval($hours)*60;
+                    }
+                }
+                catch (\Exception $e){
+                    DB::rollBack();
+                    return $this->response(200,array('status'=>'error','msg'=>'Error parsing hours '.$user[2]));
+                }
+            }
+            $summer_hours = $user[4];
+            if ($user[4]===NULL){ //HOURS CHECK
+                $summer_hours = 7*60;
+            }
+            else{
+                try{
+                    if (!is_numeric($summer_hours)){
+                        $summer_hours = explode(":",$summer_hours);
+                        $summer_hours = intval($summer_hours[0])*60 + intval($summer_hours[1]);
+                    }
+                    else{
+                        $summer_hours = intval($summer_hours)*60;
+                    }
+                }
+                catch (\Exception $e){
+                    DB::rollBack();
+                    return $this->response(200,array('status'=>'error','msg'=>'Error parsing hours '.$user[2]));
+                }
+            }
+            $admin = 0;
+            if ($user[5]!=NULL && is_numeric($user[5]) && intval($user[5])===1){ //HOURS CHECK
+                $admin = 1;
+            }
+            $result = User::create([
+                'name' => $user[0]." ".$user[1],
+                'email' => $user[2],
+                'password' => Hash::make(Str::random(10)),
+                'supervisor' => null,
+                'active' => 1,
+                'mins' => $hours,
+                'summermins' => $summer_hours,
+            ]);
+            if ($result===NULL){
+                DB::rollBack();
+                return $this->response(200,array('status'=>'error','msg'=>'Error creating user '.$user[2]));
+            }
+            Role::create([
+                'user' => $result->id,
+                'group' => 1
+            ]);
+            if ($admin === 1){
+                Role::create([
+                    'user' => $result->id,
+                    'group' => 2
+                ]);
+            }
+        }
+        foreach ($import_users as $user){
+            if ($user[6]!==NULL && !filter_var($user[6], FILTER_VALIDATE_EMAIL)){ //EMAIL CHECK
+                DB::rollBack();
+                return $this->response(200,array('status'=>'error','msg'=>'Wrong supervisor email for user: '.$user[2]));
+            }
+            if ($user[6]!==NULL){
+                $supervisor = User::where('email','=',$user[6])->get()->first();
+                if ($supervisor===NULL){
+                    DB::rollBack();
+                    return $this->response(200,array('status'=>'error','msg'=>'Supervisor '.$user[6].' don\'t exists'));
+                }
+                $user = User::where('email','=',$user[2])->get()->first();
+                $user->supervisor = $supervisor->id;
+                $user->save();
+                $isSuper = Role::where('user','=',$supervisor->id)->where('group','=','3')->get()->first()===NULL?false:true;
+                if(!$isSuper){
+                    Role::create([
+                        'user' => $supervisor->id,
+                        'group' => 3
+                    ]);
+                }
+            }
+        }
+        DB::commit();
+        return $this->response(200,array('status'=>'ok'));
+    }
+
     public function AddEditUser(Request $request)
     {
         if (!Auth::user()->isInGroup(2)){
@@ -281,12 +403,11 @@ class ApiController extends Controller
             'datefrom' => 'required|integer',
             'dateto' => 'required|integer',
             'fest' => 'required|integer',
-            'comment' => 'required|string|max:200|min:1'
+            'title' => 'required'
         ])->validate();
 
         $user = Auth::user();
 
-        $approved = 0;
         $usr = $user->id;
 
         $datefrom = new DateTime();
@@ -299,15 +420,27 @@ class ApiController extends Controller
         $dateto->setTime(0,0,0);
         $dateto = $dateto->getTimestamp();
 
-        $comment = $request["comment"];
-        $fest = intval($request["fest"]);
+        $title = $request["title"];
 
-        if ($user->isInAnyGroup([2,3])){
-            $approved=1;
+        if (is_numeric($title)){
+            switch (intval($title)){
+                case 1:
+                    $title = "Vacations";
+                    break;
+                case 2:
+                    $title = "Leave";
+                    break;
+                default:
+                    return $this->response(200,array('status'=>'error','msg'=>'Title not exists!'));
+            }
+        }
+        else if (!$user->isInGroup(2)){
+            return $this->response(200,array('status'=>'error','msg'=>'No access to custom title!'));
         }
 
+        $fest = $request["fest"]!=NULL&&is_numeric($request["fest"])?intval($request["fest"]):0;
+
         if ($user->isInGroup(2) && $fest===1){
-            $approved=1;
             $usr = null;
         }
 
@@ -315,7 +448,7 @@ class ApiController extends Controller
             return $this->response(200,array('status'=>'error','msg'=>'Dates error!'));
         }
 
-        if (trim($comment)===""){
+        if (trim($title)===""){
             return $this->response(200,array('status'=>'error','msg'=>'Wrong title'));
         }
 
@@ -323,7 +456,7 @@ class ApiController extends Controller
             'user' => $usr,
             'from' => $datefrom,
             'to' => $dateto,
-            'comment' => $comment.($usr!==null?", ".$user->name:"")
+            'comment' => $title.($usr!==null?", ".$user->name:"")
         ]);
 
         return $this->response(200,array('status'=>'ok'));
@@ -360,16 +493,16 @@ class ApiController extends Controller
 
         if ($request['date']!==null &&$request['from_hour']!==null &&$request['to_hour']!==null &&$request['breaktime']!==null){
 
-            $rdate = new DateTime();
-            $rdate->setTimestamp($rows[0]->register_date);
-            $rdate->setTime(0,0,0);
-            $rdate2 = new DateTime();
-            $rdate2->setTimestamp(time());
-            $rdate2->setTime(0,0,0);
+            //$rdate = new DateTime();
+            //$rdate->setTimestamp($rows[0]->register_date);
+            //$rdate->setTime(0,0,0);
+            //$rdate2 = new DateTime();
+            //$rdate2->setTimestamp(time());
+            //$rdate2->setTime(0,0,0);
 
-            if ($rows[0]->editable === 0 && $rdate->getTimestamp()!==$rdate2->getTimestamp()){
-                return $this->response(200,array('status'=>'error','msg'=>'This date is too old'));
-            }
+            //if ($rows[0]->editable === 0 && $rdate->getTimestamp()!==$rdate2->getTimestamp()){
+            //    return $this->response(200,array('status'=>'error','msg'=>'This date is too old'));
+            //}
 
             Validator::make($request->all(), [
                 'date' => 'required|integer',

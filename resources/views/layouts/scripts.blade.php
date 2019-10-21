@@ -5,6 +5,8 @@
 <script src="{{ url('/') }}/js/notify.min.js"></script>
 <script src="{{ url('/') }}/js/util.js?v={{time()}}"></script>
 <script src="{{ url('/') }}/js/datatables.min.js"></script>
+<script src="{{ url('/') }}/js/jquery.csv.min.js"></script>
+
 @if (Request::is('admin'))
 <script src="{{ url('/') }}/js/xlsx.min.js"></script>
 @endif
