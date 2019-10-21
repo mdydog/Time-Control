@@ -11,6 +11,7 @@ Route::get('/admin', 'HomeController@adminpanel');
 Route::get('/admin/users', 'HomeController@userlist');
 Route::get('/profile', 'HomeController@profile');
 Route::get('/calendar', 'HomeController@calendar');
+Route::get('/logs', 'HomeController@LogPanel');
 
 Route::post('/profile', 'HomeController@editprofile');
 
@@ -31,7 +32,6 @@ Route::post('/api/addevent', 'ApiController@AddEvent');
 Route::post('/api/removeevent', 'ApiController@RemoveEvent');
 Route::post('/api/register', 'ApiController@Register');
 Route::post('/api/edit/{id}', 'ApiController@Edit')->where('id', '[1-9][0-9]*');
-Route::post('/api/editable/{id}', 'ApiController@EnableOneEdit')->where('id', '[1-9][0-9]*');
 Route::post('/api/savesummer', 'ApiController@AddEditSummer');
 
 

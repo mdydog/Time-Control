@@ -123,3 +123,16 @@ pre {
 .white-readonly{
     background-color: white !important;
 }
+
+#log_table{
+    width: 100% !important;
+}
+#log_table .add{
+    color:#00c824;
+}
+#log_table .edit{
+    color:#ff9000;
+}
+#log_table .delete{
+    color:red;
+}

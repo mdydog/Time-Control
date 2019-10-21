@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -69,5 +70,21 @@ class HomeController extends Controller
         }
 
         return view('profile',['status'=>true]);
+    }
+
+    public function LogPanel()
+    {
+        if (!Auth::user()->isInGroup(2)){
+            abort(404);
+            return null;
+        }
+
+        $logs = DB::table('logs')
+            ->join('users', 'users.id', '=', 'logs.creator')
+            ->orderBy('created_at','desc')
+            ->select('logs.*', 'users.name as creator_name')
+            ->get();
+
+        return view('log',['logs'=>$logs]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Event;
 use App\Group;
+use App\Log;
 use App\Role;
 use App\SummerDate;
 use App\Time;
@@ -135,6 +136,7 @@ class ApiController extends Controller
             $indb = SummerDate::where("year","=",$year)->get()->first();
             if ($indb===null){
                 try{
+                    Log::addlog("Summer Range created for year ".$year.", From: ".date("d/m/Y",$from).", To: ".date("d/m/Y",$to));
                     SummerDate::create([
                         'year' => $year,
                         'date_from' => $from,
@@ -148,6 +150,7 @@ class ApiController extends Controller
             }
             else{
                 try{
+                    Log::editlog("Summer Range edited for year ".$indb->year." new From: ".date("d/m/Y",$from).", new To: ".date("d/m/Y",$to)." old values: ".date("d/m/Y",$indb->date_from).", ".date("d/m/Y",$indb->date_to));
                     $indb->date_from=$from;
                     $indb->date_to=$to;
                     if (!$indb->save()){
@@ -161,6 +164,7 @@ class ApiController extends Controller
                 }
             }
         }
+
         DB::commit();
         return $this->response(200,array('status'=>'ok'));
     }
@@ -253,11 +257,13 @@ class ApiController extends Controller
                 DB::rollBack();
                 return $this->response(200,array('status'=>'error','msg'=>'Error creating user '.$user[2]));
             }
+            Log::addlog("User created ".$user[2]." by batch import");
             Role::create([
                 'user' => $result->id,
                 'group' => 1
             ]);
             if ($admin === 1){
+                Log::editlog("User now is admin, email: ".$user[2]." by batch import");
                 Role::create([
                     'user' => $result->id,
                     'group' => 2
@@ -280,11 +286,13 @@ class ApiController extends Controller
                 $user->save();
                 $isSuper = Role::where('user','=',$supervisor->id)->where('group','=','3')->get()->first()===NULL?false:true;
                 if(!$isSuper){
+                    Log::editlog("User now is supervisor email: ".$supervisor->email." by batch import");
                     Role::create([
                         'user' => $supervisor->id,
                         'group' => 3
                     ]);
                 }
+                Log::addlog("User now is supervised, email: ".$user->email." supervised by ".$supervisor->email." action by batch import");
             }
         }
         DB::commit();
@@ -323,6 +331,7 @@ class ApiController extends Controller
 
         DB::beginTransaction();
         if ($user!=null){ //edit
+            $log_msg="User edited email: ".$user->email.", old data: \r\n".$user->loginfo().", new data: \r\n";
             $user->name = $request["name"];
             $user->mins = $request["mins"];
             $user->summermins = $request["summermins"];
@@ -330,6 +339,7 @@ class ApiController extends Controller
             $user->supervisor = intval($request["supervisor"])===-1?null:$request["supervisor"];
             $user->active = $request["active"];
             $user->save();
+            Log::editlog($log_msg.$user->loginfo());
         }
         else{ //add
 
@@ -347,6 +357,7 @@ class ApiController extends Controller
                     'active' => $request["active"],
                     'password' => Hash::make(Str::random(10))
                 ]);
+                Log::addlog("User added: ".$user->loginfo());
             }
             catch (\Exception $e){
                 DB::rollBack();
@@ -366,6 +377,7 @@ class ApiController extends Controller
                 'user' => $user->id,
                 'group' => 2
             ]);
+            Log::editlog("User now is admin email: ".$user->email);
         }
 
         if (intval($request["supervisorrole"])===1){
@@ -373,27 +385,9 @@ class ApiController extends Controller
                 'user' => $user->id,
                 'group' => 3
             ]);
+            Log::editlog("User now is supervisor ".$user->email);
         }
         DB::commit();
-        return $this->response(200,array('status'=>'ok'));
-    }
-
-    public function EnableOneEdit(Request $request,$id){
-        $user = Auth::user();
-        $time = Time::where('id','=',$id)->get()->first();
-
-        if ($time===null || !$user->isInAnyGroup([2,3])){
-            return $this->response(200,array('status'=>'error','msg'=>"no access 0x1"));
-        }
-
-        if (!$user->isInGroup(2)){
-            if ($time->user!=$user->id && count(User::where('id','=',$time->user)->where('supervisor','=',$user->id)->get()->all())<=0){ // si no es un time suyo y no es su supervisor
-                return $this->response(200,array('status'=>'error','msg'=>"no access 0x2"));
-            }
-        }
-
-        $time->editable=1;
-        $time->save();
         return $this->response(200,array('status'=>'ok'));
     }
 
@@ -458,7 +452,7 @@ class ApiController extends Controller
             'to' => $dateto,
             'comment' => $title.($usr!==null?", ".$user->name:"")
         ]);
-
+        Log::addlog("Event created ".$e->loginfo());
         return $this->response(200,array('status'=>'ok'));
     }
 
@@ -475,6 +469,7 @@ class ApiController extends Controller
             $user->isInGroup(3) &&
                 $event->user !== null &&
                 count(User::where('supervisor','=',$user->id)->where('id','=',$event->user)->get()->all())>0){
+            Log::deletelog("Event deleted ".$event->loginfo());
             $event->delete();
         }
         else{
@@ -492,17 +487,6 @@ class ApiController extends Controller
         }
 
         if ($request['date']!==null &&$request['from_hour']!==null &&$request['to_hour']!==null &&$request['breaktime']!==null){
-
-            //$rdate = new DateTime();
-            //$rdate->setTimestamp($rows[0]->register_date);
-            //$rdate->setTime(0,0,0);
-            //$rdate2 = new DateTime();
-            //$rdate2->setTimestamp(time());
-            //$rdate2->setTime(0,0,0);
-
-            //if ($rows[0]->editable === 0 && $rdate->getTimestamp()!==$rdate2->getTimestamp()){
-            //    return $this->response(200,array('status'=>'error','msg'=>'This date is too old'));
-            //}
 
             Validator::make($request->all(), [
                 'date' => 'required|integer',
@@ -534,21 +518,25 @@ class ApiController extends Controller
             if ($rows[0]->date != $date->getTimestamp() && count($rowsx)>0){
                 return $this->response(200,array('status'=>'error','msg'=>'You have already registered this date'));
             }
-
+            $log_text="Working date edited old data: \r\n".$rows[0]->loginfo().", new data: \r\n";
             $rows[0]->date = $date->getTimestamp();
             $rows[0]->start_hour = $from_hour;
             $rows[0]->end_hour = $to_hour;
             $rows[0]->breaktime = $breaktime;
-        }
 
-        $comment = $request['comment'];
-        if ($comment===null){
-            $comment="";
-        }
+            $comment = $request['comment'];
+            if ($comment===null){
+                $comment="";
+            }
 
-        $rows[0]->comment = $comment;
-        $rows[0]->editable = 0;
-        $rows[0]->save();
+            $rows[0]->comment = $comment;
+            $rows[0]->save();
+
+            Log::editlog($log_text.$rows[0]->loginfo());
+        }
+        else{
+            return $this->response(200,array('status'=>'error','msg'=>'Request error'));
+        }
 
         return $this->response(200,array('status'=>'ok'));
     }

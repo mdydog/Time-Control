@@ -15,4 +15,12 @@ class Event extends Model
     protected $fillable = [
         'user', 'from', 'to','comment'
     ];
+
+
+    function loginfo(){
+        return "[User: ".($this->user===NULL?"Fest event":User::where('id',$this->user)->get()->first()->email).
+            ", From: ".date("d/m/Y",$this->from).
+            ", To: ".date("d/m/Y",$this->from).
+            " Title: ".$this->comment."]";
+    }
 }

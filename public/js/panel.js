@@ -199,15 +199,9 @@ function insertHistoryRow(row,minimun_date_week){
 
     var buttons = "";
     if (admin_panel_mode) {
-        if (row.editable===0){
-            //buttons = "<i class=\"fas fa-highlighter click\" onclick=\"enableOneEdit(event,"+row.id+")\" title='Enable one time edit mode'></i>";
-        }
+
     } else {
-        //if (dateFormat(new Date(), false) === regisDate || row.editable) {
-            buttons = "<i class=\"fas fa-edit click\" title='Edit' onclick='editCommentModal(event," + row.id + ",true," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
-        //} else {
-            //buttons = "<i class=\"fas fa-edit click\" title='Edit comment' onclick='editCommentModal(event," + row.id + ",false," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
-        //}
+        buttons = "<i class=\"fas fa-edit click\" title='Edit' onclick='editCommentModal(event," + row.id + ",true," + row.start_hour + "," + row.end_hour + "," + row.breaktime + ",\""+date+"\")'></i>";
     }
 
     var maxfseconds = 0;

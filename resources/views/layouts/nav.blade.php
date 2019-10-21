@@ -6,7 +6,7 @@
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
-            <li class="nav-item{{(Request::is('admin','admin/users','profile','calendar')?"":" active")}}">
+            <li class="nav-item{{(Request::is('admin','admin/users','profile','calendar','logs')?"":" active")}}">
                 <a class="nav-link" href="{{url("/")}}/">Home</a>
             </li>
             @if(Auth::user()->isInAnyGroup([2,3]))
@@ -28,6 +28,11 @@
             <li class="nav-item{{(Request::is('calendar')?" active":"")}}">
                 <a class="nav-link" href="{{url("/")}}/calendar">Calendar</a>
             </li>
+            @if(Auth::user()->isInGroup(2))
+                <li class="nav-item{{(Request::is('logs')?" active":"")}}">
+                    <a class="nav-link" href="{{url("/")}}/logs">Logs</a>
+                </li>
+            @endif
         </ul>
         @if(Auth::user()->isInGroup(2))
             <span style="font-size: 0.6em;font-style: italic;color:white;margin-right: 10px">Server time: {{date("d/m/Y H:i")." UTC"}}</span>

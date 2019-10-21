@@ -57,4 +57,13 @@ class User extends Authenticatable
         }
         return $result;
     }
+
+    function loginfo(){
+        return "[Name: ".$this->name.
+            ", Email: ".$this->email.
+            ", Supervisor: ".($this->supervisor===NULL?"None":User::where('id',$this->supervisor)->get()->first()->name).
+            ", Login Enable: ".$this->active.
+            ", Working Hours: ".Log::hourparse($this->mins,'m').
+            ", Summer Hours: ".Log::hourparse($this->summermins,'m');
+    }
 }
