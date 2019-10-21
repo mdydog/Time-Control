@@ -109,7 +109,7 @@ function insertEvent(event,mode_calendar){
     var date_ranges=" <span>"+dateFormat(new Date(event.from*1000))+(event.from!==event.to?"-"+dateFormat(new Date(event.to*1000)):"")+"</span>";
     var approved_label=(cs!==""?"<span class=\"status\">("+cs+")</span>":"");
     var adm_btn="";
-    if (current_user.admin){
+    if (current_user.groups.includes(2) || event.user!==null && event.user!=current_user.id){
         adm_btn="<div class=\"text-right\" style='display: inline'> <i class=\"fas fa-minus-circle fa-error\" style='background-color: white;border-radius: 100px;' onclick=\"removeEvent(event,"+event.id+")\"></i></div>"
     }
     var html = "<li onclick=\"go("+(event.from*1000)+")\" class=\""+liclass+"\">"+fixXSS(event.comment)+approved_label+adm_btn+date_ranges+"</li>";
