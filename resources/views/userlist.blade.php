@@ -19,7 +19,7 @@
                     </div>
                     <div class="form-group">
                         <label for="uemail">Email*:</label>
-                        <input type="text" class="form-control" id="uemail" placeholder="email@imdea.org" required/>
+                        <input type="text" class="form-control" id="uemail" placeholder="email@timec.es" required/>
                     </div>
                     <div class="form-group">
                         <label for="whours">Working hours*:</label>

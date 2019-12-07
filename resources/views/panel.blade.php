@@ -51,7 +51,7 @@
                 <div id="register_card" class="card p-4" style="display: none">
                     <div class="row">
                         <div class="col-md-12 text-center">
-                            <h2>IMDEA Networks</h2>
+                            <h2>Time Control</h2>
                         </div>
                     </div>
                     <div class="row">

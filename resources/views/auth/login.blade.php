@@ -4,7 +4,7 @@
     <div class="wrapper">
         <form class="form-signin" method="POST" action="{{ route('login') }}">
             @csrf
-            <h2 class="form-signin-heading">IMDEA Networks</h2>
+            <h2 class="form-signin-heading">Time Control</h2>
             @if (session('message'))
                 <div class="alert alert-danger">{{ session('message') }}</div>
             @endif
