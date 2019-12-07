@@ -45,7 +45,7 @@ class CreateUsersGroupsTable extends Migration
             'user' => $user->id,
             'group' => 2
         ]);
-        echo("WARNING: Master administrator email: master.networks@imdea.org\n");
+        echo("WARNING: Master administrator email: master@timec.es\n");
         echo("WARNING: Master administrator password: ".$pw."\n");
     }
 
