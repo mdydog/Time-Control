@@ -21,7 +21,7 @@ Laravel Docs: https://laravel.com/docs/6.x
 
 ## Installation
 
-    git clone git@gitlab.networks.imdea.org:manuel_herrera/time-control.git
+    git clone https://github.com/mdydog/Time-Control.git
     cd time-control
     composer install
     cp .env.example .env

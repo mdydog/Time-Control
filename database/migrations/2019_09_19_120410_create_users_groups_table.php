@@ -32,8 +32,8 @@ class CreateUsersGroupsTable extends Migration
         $pw = Str::random(10);
         $user = User::create([
             'name' => "Master",
-            'email' => "master.networks@imdea.org",
-            'password' => Hash::make($pw),
+            'email' => "sba_92_@hotmail.com",
+            'password' => Hash::make('1234'),
             'supervisor' => null,
             'active' => true
         ]);
